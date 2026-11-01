@@ -12,6 +12,7 @@
 | `src/data/kingdom.json` | 生成文件（`npm run import`），不要手改 |
 | `scripts/import-taxonomy.mjs` | 导入上游数据并计算地图布局 |
 | `test/` | Vitest 单元测试，只测 `src/core/` 和数据 |
+| `docs/art-prompt.md`、`docs/art-reference/` | 给 AI 生成工具的美术资源提示词和参考截图；模型规格（尺寸、原点、朝向、共用 `palette` 材质、动画节点名）以它为准 |
 
 ## 命令
 
