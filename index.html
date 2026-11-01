@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+		<meta name="theme-color" content="#2a3a5c" />
+		<meta name="description" content="数学王国：把小学数学知识图谱做成一个可以建造的 3D 王国。" />
+		<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%B0%3C/text%3E%3C/svg%3E" />
+		<title>数学王国</title>
+	</head>
+	<body>
+		<div id="scene"></div>
+
+		<header class="topbar">
+			<h1>数学王国</h1>
+			<div class="stats" id="stats"></div>
+			<div class="actions">
+				<button id="patrol" class="btn warm" title="去照看该复习的地块">今日巡视</button>
+				<button id="view" class="btn" title="切换斜视和俯视">俯视</button>
+				<button id="home" class="btn" title="回到王城">王城</button>
+				<button id="settings-btn" class="btn icon" title="设置">⚙</button>
+			</div>
+		</header>
+
+		<nav class="grades" id="grades"></nav>
+
+		<aside class="panel" id="panel" hidden></aside>
+
+		<div class="legend" id="legend">
+			<span><i style="background: #f6e3a6"></i>空地，可建造</span>
+			<span><i style="background: #6db355"></i>已建成</span>
+			<span><i style="background: #ffffff; border-color: #333"></i>?：该复习</span>
+			<span><i style="background: #8f9a4a"></i>长草 / 哥布林</span>
+			<span><i style="background: #e8edf4"></i>迷雾：先修未学</span>
+		</div>
+
+		<div class="toast" id="toast" hidden></div>
+
+		<dialog id="settings">
+			<h2>设置</h2>
+			<p class="muted" id="save-state"></p>
+			<div class="row">
+				<button class="btn" id="demo">载入演示进度</button>
+				<button class="btn danger" id="reset">清空进度</button>
+			</div>
+			<h3>关于</h3>
+			<p>
+				知识点、先修关系和题目来自
+				<a href="https://github.com/xiaoyang111222/cn-math-taxonomy" target="_blank" rel="noopener">cn-math-taxonomy</a>
+				（<a href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans" target="_blank" rel="noopener">CC BY-NC 4.0</a>），
+				对齐人教版小学数学。这些内容由 AI 生成，<b>尚未经过教师审核</b>，如发现错题请反馈。
+			</p>
+			<p class="muted">进度只保存在这台设备的浏览器里。</p>
+			<form method="dialog"><button class="btn">关闭</button></form>
+		</dialog>
+
+		<script type="module" src="/src/main.ts"></script>
+	</body>
+</html>

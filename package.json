@@ -1,0 +1,31 @@
+{
+	"name": "math-kingdom",
+	"version": "0.1.0",
+	"private": true,
+	"description": "数学王国：把小学数学知识图谱做成一个可以建造的 3D 王国",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "tsc --noEmit && vite build",
+		"preview": "vite preview",
+		"test": "vitest run",
+		"import": "node scripts/import-taxonomy.mjs"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"three": "^0.187.0"
+	},
+	"devDependencies": {
+		"@types/three": "^0.187.0",
+		"typescript": "^7.0.2",
+		"vite": "^8.3.5",
+		"vitest": "^5.0.5"
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/TonyWoo/math-kingdom"
+	}
+}
