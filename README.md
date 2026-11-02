@@ -38,7 +38,7 @@ npm run build      # 打包到 dist/，是纯静态网站
 
 ## 部署
 
-`npm run build` 生成的 `dist/` 是纯静态文件，放到任何静态服务器上就能用（仓库是私有的，GitHub Pages 用不了）。每次推送 GitHub Actions 都会跑测试和构建。
+推送到 `main` 后，GitHub Actions 自动测试、构建并发布到 GitHub Pages：<https://tonywoo.github.io/math-kingdom/>。每次推送都会跑测试和构建（`ci.yml`）。`npm run build` 生成的 `dist/` 是纯静态文件，也可以放到任何静态服务器上。
 
 ## 数据
 
