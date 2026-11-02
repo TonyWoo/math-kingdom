@@ -1361,10 +1361,20 @@ body.fp-mode .legend {
 	font-size: 20px;
 }
 
-/* 横幅和面板标题重复的信息收起来 */
-.holo-dock .holo-bar,
+/* 横幅和面板标题重复的信息收起来（标题栏只留声音开关） */
+.holo-dock .holo-bar {
+	padding: 4px 10px;
+	font-size: 11px;
+}
+
+.holo-dock .holo-bar .holo-name,
 .holo-dock .battle-head span:first-child {
 	display: none;
+}
+
+.holo-dock .holo-bar {
+	justify-content: flex-end;
+	border-bottom: none;
 }
 
 .holo-dock .prompt .speak {
@@ -1456,4 +1466,138 @@ body.fp-mode .legend {
 
 .holo-dock .action .btn {
 	min-height: 44px;
+}
+
+/* 手机竖屏：面板贴底，留出 iPhone 底部安全区；对话时隐藏年级按钮，免得盖住键盘 */
+.holo-dock.portrait {
+	bottom: calc(8px + env(safe-area-inset-bottom));
+	max-height: 66vh;
+	max-height: 66dvh;
+}
+
+/* 触屏横屏（平板、手机横放）：面板贴在右侧 */
+.holo-dock.side {
+	left: auto;
+	right: 12px;
+	top: 70px;
+	bottom: calc(12px + env(safe-area-inset-bottom));
+	width: min(440px, 46vw);
+	max-height: none;
+}
+
+.holo-dock.side .dock-say {
+	display: none;
+}
+
+body:has(#voxel.in-dialogue) .grades {
+	display: none;
+}
+
+/* 贴底的答题面板紧凑一点，整块键盘放得下 */
+.holo-dock .quiz .step {
+	margin-bottom: 2px;
+	font-size: 12px;
+}
+
+.holo-dock .quiz .dots {
+	margin: 2px 0 6px;
+}
+
+.holo-dock .holo-body .close {
+	top: 4px;
+	width: 30px;
+	height: 30px;
+}
+
+.holo-dock .choices {
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.holo-dock .choices .btn {
+	min-height: 44px;
+	font-size: 16px;
+}
+
+.holo-dock .feedback {
+	margin-top: 8px;
+	padding: 8px 10px;
+	font-size: 15px;
+}
+
+/* 手机竖屏的对话面板：用满顶栏以下的高度，键盘整块放得下 */
+.holo-dock.portrait {
+	top: auto;
+	max-height: calc(100vh - 128px);
+	max-height: calc(100dvh - 128px - env(safe-area-inset-bottom));
+	gap: 4px;
+}
+
+.holo-dock .holo {
+	position: relative !important;
+}
+
+.holo-dock.portrait .holo-bar {
+	position: absolute;
+	top: 6px;
+	right: 44px;
+	padding: 0;
+	z-index: 2;
+}
+
+.holo-dock.portrait .holo-voice {
+	width: 30px;
+	height: 30px;
+	font-size: 14px;
+}
+
+.holo-dock.portrait .holo-body {
+	padding: 6px 10px 0;
+}
+
+.holo-dock.portrait .prompt {
+	padding: 6px 10px;
+	font-size: 16px;
+	line-height: 1.4;
+}
+
+.holo-dock.portrait .prompt .speak {
+	width: 34px;
+	height: 34px;
+}
+
+.holo-dock.portrait .entry {
+	min-height: 40px;
+	margin-top: 6px;
+	padding: 4px 10px;
+	font-size: 22px;
+}
+
+.holo-dock.portrait .keypad {
+	gap: 5px;
+	margin-top: 6px;
+}
+
+.holo-dock.portrait .keypad .btn {
+	min-height: 40px;
+	font-size: 19px;
+	padding: 0;
+}
+
+.holo-dock.portrait .dock-say {
+	padding: 6px 10px;
+	font-size: 13px;
+	line-height: 1.35;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.holo-dock.portrait .dock-say b {
+	margin-right: 6px;
+}
+
+#voxel.in-dialogue:has(.holo-dock.portrait:not([hidden])) .labels .label.card:not(.shield) {
+	display: none;
 }

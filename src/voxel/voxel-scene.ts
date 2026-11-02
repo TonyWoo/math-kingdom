@@ -826,8 +826,9 @@ export class VoxelScene implements View {
 			}
 		} else {
 			// 竖屏时面板占下半屏，老师站在一朵小云上浮在面板上方（保卫战时镜头低着头，老师放低一点）
-			ground = eye.y - (battle ? 1.15 : 0.7);
-			if (battle) spot = eye.clone().add(f.clone().multiplyScalar(3.6)).add(r.clone().multiplyScalar(-0.6));
+			// 竖屏时面板贴在屏幕下半部分，老师浮在上半部分（保卫战时老师不出现，只用横幅说话）
+			ground = eye.y + (battle ? -1.15 : 0.3);
+			spot = eye.clone().add(f.clone().multiplyScalar(battle ? 3.6 : 4)).add(r.clone().multiplyScalar(battle ? -0.6 : 0));
 		}
 		if (portrait) {
 			const b = new MeshBuilder(this.atlas);
@@ -857,13 +858,20 @@ export class VoxelScene implements View {
 		this.holo.rotation.set(battle ? this.player.pitch : 0, yaw + (portrait ? 0 : -0.28), 0, "YXZ");
 		this.holo.scale.setScalar(px);
 		this.holo.element.classList.toggle("portrait", portrait);
-		this.docked = portrait && battle;
+		// 触屏设备（手机、平板）和竖屏：面板不放进 3D 空间，而是贴在屏幕上。iOS Safari 对 CSS 3D 变换里的元素
+		// 判断点到哪里不准（会点错键、删不掉），而且竖屏放不下整块键盘。电脑上照样浮在空中。
+		this.docked = portrait || matchMedia("(pointer: coarse)").matches;
 		if (this.docked) {
-			group.visible = false;
+			if (portrait && battle) group.visible = false;
 			this.holo.element.style.transform = "";
+			this.dock.classList.toggle("portrait", portrait);
+			this.dock.classList.toggle("side", !portrait);
 			this.dock.appendChild(this.holo.element);
 			this.dock.hidden = false;
+			// 竖屏时台词显示在面板上方的横幅里，3D 气泡就不显示了
+			this.speech.visible = !portrait;
 		} else {
+			this.speech.visible = true;
 			this.scene.add(this.holo);
 		}
 		this.container.classList.add("in-dialogue");
@@ -885,6 +893,7 @@ export class VoxelScene implements View {
 			this.holo.element.remove();
 			this.dock.hidden = true;
 			this.docked = false;
+			this.speech.visible = true;
 		}
 		this.teacher = null;
 		this.talking = false;
