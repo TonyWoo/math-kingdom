@@ -6,7 +6,7 @@
 
 | 路径 | 内容 |
 | --- | --- |
-| `src/core/` | 纯逻辑，不依赖 three.js 和 DOM：`kingdom.ts`（先修索引、地块状态、演示进度）、`quiz.ts`（建造三步、复习、出题、更新进度）、`judge.ts`（判题）、`save.ts`（存档）、`types.ts` |
+| `src/core/` | 纯逻辑，不依赖 three.js 和 DOM：`kingdom.ts`（先修索引、地块状态、演示进度）、`quiz.ts`（建造三步、复习、出题、更新进度）、`judge.ts`（判题）、`variant.ts`（变式题：按 verify 算式换数字，规则见文件开头，`test/variant.test.ts` 对整个题库生成变式检查）、`save.ts`（存档）、`types.ts` |
 | `src/scene/` | three.js：`assets.ts`（加载 `public/art/` 的模型和精灵，静态网格合并、动画零件单独保留，共用一个 palette 材质）、`world.ts`（岛、台地、王城、森林）、`buildings.ts`（建筑和装饰：有资源用模型，没有就用基本几何体拼，静态零件用 `bake` 合并）、`kingdom-scene.ts`（地块、迷雾、标签、拾取、镜头、动画） |
 | `src/scene/view.ts` | 两种视角共用的 `View` 接口；界面只通过它操作 3D 画面 |
 | `src/voxel/` | 第一人称方块世界：`terrain.ts`（纯逻辑：布局换算成方块网格、高度、地块和小路，`test/voxel.test.ts` 测可走性）、`atlas.ts`（代码画的像素贴图集）、`mesher.ts`（方块拼网格、方块种类）、`structures.ts`（建筑、王城、树、哥布林的方块图纸）、`player.ts`（第一人称移动和碰撞，键鼠和触摸）、`voxel-scene.ts`（场景，实现 `View`） |
@@ -37,6 +37,7 @@ npm run import -- <cn-math-taxonomy clone>   # 重新生成数据和布局
 8. **换美术资源**：新模型必须符合 `docs/art-prompt.md` 的规格（原点在底面中心、正面 +Z、只用 `palette` 材质、动画节点名）。加了新模型要加进 `assets.ts` 的 `MODELS`，`test/art.test.ts` 会检查文件和基本规格。
 6. **风格**：Tab 缩进，双引号；注释和界面文字用中文。
 7. **用户可见的变化**同时更新 README 的中文和 English 部分。
+10. **变式题只在确定安全时出**：`variant.ts` 的规则（算式里的数都在题干里、每个数出现次数一致、题干所有数都参与计算、大小关系不变、“N以内”包括中间结果、进位退位和口诀范围）宁可少出也不能出错题。放宽规则前，先用测试随机抽一批变式题人工看。
 9. **方块世界**：1 格 = 布局 20 个单位；每个年级比内圈高 1 格，环路和大道与内侧同高，保证一步最多上下 1 格（改地形后 `test/voxel.test.ts` 会检查每块地都走得到）。建筑占 3×3 格，图纸里 x、z 在 -1..1。贴图必须是原创的（`atlas.ts` 用代码画），不要放进任何现成游戏的贴图、角色或界面。
 
 ## 验证

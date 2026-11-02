@@ -246,6 +246,8 @@ function main() {
 		};
 		if (q.choices) out.choices = q.choices.map((c) => ({ key: c.key, text: c.text }));
 		if (q.explanation) out.explanation = q.explanation;
+		// 纯四则运算的标准答案算式，用来生成换数字的变式题（core/variant.ts）
+		if (q.type === "numeric" && typeof q.verify === "string" && /^[\d\s.+\-*/()]+$/.test(q.verify)) out.verify = q.verify;
 		byTopic.get(q.topicId).push(out);
 	}
 

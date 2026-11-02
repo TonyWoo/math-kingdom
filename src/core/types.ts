@@ -31,6 +31,8 @@ export interface Question {
 	answer: string;
 	choices?: { key: string; text: string }[];
 	explanation?: string;
+	verify?: string; // 标准答案的四则运算算式（只有填数题有），变式题靠它换数字
+	variantOf?: string; // 变式题：原题的 id
 }
 
 export interface Edge {

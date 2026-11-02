@@ -6,10 +6,13 @@
 //   金顶  （→ 3 星）：挑战题答对，而且和上一颗星不在同一天（隔天还会，才算真的掌握）
 // 复习：从已经解锁难度的题里抽 2 道，全对就把下次复习往后推（INTERVALS），答错不扣星，只是还要再复习。
 // 同一步连续失败 2 次，提示先巩固没学牢的 hard 先修（寻根）。
+// 不总是同几道题：复习和练习优先出上一次没出过的题；复习、练习和建造失败后重试时，能换数字的题换成变式题
+// （core/variant.ts）。第一次建造用原题。
 
 import { DAY, INTERVALS, type Kingdom, type Progress, status, stars } from "./kingdom";
 import { judge } from "./judge";
 import type { Difficulty, Question } from "./types";
+import { makeVariant } from "./variant";
 
 export type Plan =
 	| { kind: "locked"; missing: string[] }
@@ -59,17 +62,27 @@ function shuffle<T>(list: T[], rng: () => number): T[] {
 export function questionsFor(k: Kingdom, progress: Progress, id: string, plan: Plan, rng = Math.random): Question[] {
 	const all = k.data.questions[id];
 	const of = (d: Difficulty) => all.filter((q) => q.difficulty === d);
+	const p = progress[id];
+	const name = k.topic(id).name;
+	// 能换数字就换；换不了就用原题
+	const vary = (list: Question[]) => list.map((q) => makeVariant(q, name, rng) ?? q);
 	switch (plan.kind) {
-		case "build":
-			if (plan.stage === 1) return shuffle(of("basic"), rng);
-			return of(plan.stage === 2 ? "standard" : "challenge").slice(0, 1);
+		case "build": {
+			const list = plan.stage === 1 ? shuffle(of("basic"), rng) : of(plan.stage === 2 ? "standard" : "challenge").slice(0, 1);
+			// 失败后重试时换数字，免得照着刚看过的答案填
+			return p?.fails ? vary(list) : list;
+		}
 		case "review":
 		case "practice": {
 			const allowed = ALLOWED[Math.max(1, stars(progress, id))];
-			return shuffle(
+			const last = new Set(p?.last ?? []);
+			const pool = shuffle(
 				all.filter((q) => allowed.includes(q.difficulty)),
 				rng,
-			).slice(0, 2);
+			);
+			// 上次没出过的排前面（排序是稳定的，同一组里保持打乱后的顺序）
+			pool.sort((a, b) => Number(last.has(a.id)) - Number(last.has(b.id)));
+			return vary(pool.slice(0, 2));
 		}
 		default:
 			return [];
@@ -123,6 +136,7 @@ export class QuizSession {
 		const success = this.results.every((r) => r);
 		const before = stars(progress, this.id);
 		const p = (progress[this.id] ??= { stars: 0 });
+		p.last = this.questions.map((q) => q.variantOf ?? q.id);
 		let roots: string[] = [];
 		if (this.plan.kind === "build") {
 			if (success) {

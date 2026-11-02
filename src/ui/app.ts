@@ -377,10 +377,12 @@ export class App {
 		let body = `
 			<button class="close" data-act="back" aria-label="返回">×</button>
 			<div class="quiz">
-				<div class="step">${esc(t.name)} · ${this.stepTitle()} · 第 ${Math.min(s.index + (q.answered ? 0 : 1), s.questions.length)} / ${s.questions.length} 题</div>
+				<div class="step">${esc(t.name)} · ${this.stepTitle()} · 第 ${Math.min(s.index + (q.answered ? 0 : 1), s.questions.length)} / ${s.questions.length} 题${
+					question.variantOf ? ' <span class="chip new">换了数字的新题</span>' : ""
+				}</div>
 				<div class="dots">${dots}</div>
 				<div class="prompt"><span class="text">${esc(question.prompt)}</span>${
-					"speechSynthesis" in window ? '<button class="speak" data-act="speak" title="读题">${icon("speaker")}</button>' : ""
+					"speechSynthesis" in window ? `<button class="speak" data-act="speak" title="读题">${icon("speaker")}</button>` : ""
 				}</div>`;
 		if (question.kind === "choice") {
 			body += `<div class="choices">${question.choices!

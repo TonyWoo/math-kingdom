@@ -913,3 +913,11 @@ body.fp-mode .legend {
 	border-radius: 50%;
 	background: rgba(255, 255, 255, 0.7);
 }
+
+.quiz .step .chip.new {
+	margin-left: 6px;
+	padding: 1px 8px;
+	background: #e3f2ff;
+	color: #2a6fb8;
+	font-size: 12px;
+}

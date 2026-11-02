@@ -9,6 +9,7 @@
 - **建造分三步**：打地基（答对 2 道基础题）、盖房子（答对标准题）、升金顶（隔天答对挑战题）。
 - **会忘记的就要复习**：到了复习时间，屋顶冒出问号；拖久了会长草，再久哥布林就会住进来。复习答对，下次复习的间隔会拉长（1、3、7、15、30 天）。星星永远不会被扣掉。
 - **地基不稳时寻根**：同一步连续失败两次，会列出需要先巩固的先修知识点。
+- **复习不总是同几道题**：优先出上次没出过的题；能安全换数字的题会变成“换了数字的新题”（按标准答案的算式重新算答案，讲解也跟着换），建造失败后重试也会换数字。
 - **适合小朋友**：大号数字键盘，题目可以朗读，平板和手机都能用。
 
 ## 两种视角
@@ -69,7 +70,8 @@ npm test
 Directions are curriculum domains, distance from the castle is the grade, each textbook unit is a village and each of
 the 284 knowledge points is a plot. Plots stay in fog until their prerequisites are learned; each plot is built in three
 steps (foundation, house, golden roof on a later day); buildings ask for review on a spaced schedule and grow weeds or
-get a goblin when neglected. Stars are never taken away. Besides the overhead map there is a first-person mode
+get a goblin when neglected. Stars are never taken away. Reviews rotate through a plot's questions and, where it is safe,
+swap in new numbers (the answer is recomputed from the question bank's own arithmetic formula). Besides the overhead map there is a first-person mode
 (`?view=fp` or the 第一人称 button) where the kingdom becomes a walkable block world with original, code-generated pixel
 textures: WASD and mouse on desktop, a touch joystick on phones. Built with Vite, TypeScript and three.js; progress is stored in
 the browser.

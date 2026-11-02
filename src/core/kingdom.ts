@@ -25,6 +25,7 @@ export interface TopicProgress {
 	reviews?: number; // 复习成功的次数
 	lastStarDay?: string; // 上次得星的日期（YYYY-MM-DD，本地时间），金顶要隔天
 	fails?: number; // 当前这一步连续失败的次数，成功后清零
+	last?: string[]; // 上一次答题出过的原题 id（变式题记原题），下次优先出别的题
 }
 
 export type Progress = Record<string, TopicProgress>;
