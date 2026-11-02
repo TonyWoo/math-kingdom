@@ -9,6 +9,8 @@ import {
 	type Progress,
 	WEEDS_AFTER,
 	demoProgress,
+	dependencyOrder,
+	frontier,
 	needsCare,
 	stars,
 	status,
@@ -189,5 +191,70 @@ describe("quiz", () => {
 	it("迷雾里的地块不能答题，并列出缺的先修", () => {
 		const plan = planFor(k, {}, "cnm_p002", NOW);
 		expect(plan).toEqual({ kind: "locked", missing: ["cnm_p001"] });
+	});
+});
+
+describe("frontier（按依赖顺序找接下来该学什么）", () => {
+	// 教材顺序故意和依赖顺序拧着：b、c 都要先学 a，d 要先学 b
+	const topic = (id: string, grade: number) => ({
+		id,
+		name: id,
+		domain: "数与代数",
+		type: "conceptual",
+		grade,
+		semester: "上" as const,
+		chapter: "",
+		description: "",
+		mastery: [],
+		x: 0,
+		y: 0,
+		village: 0,
+		building: "mill" as const,
+	});
+	const small = new Kingdom({
+		source: { repo: "", commit: "", license: "", note: "" },
+		castle: { r: 0 },
+		sectors: [],
+		rings: [],
+		villages: [],
+		topics: [topic("b", 2), topic("c", 1), topic("a", 1), topic("d", 2)],
+		edges: [
+			{ topic: "b", prereq: "a", hard: true },
+			{ topic: "c", prereq: "a", hard: true },
+			{ topic: "d", prereq: "b", hard: true },
+		],
+		questions: {},
+	});
+
+	it("依赖顺序里先修永远在前面", () => {
+		expect(dependencyOrder(small)).toEqual(["a", "b", "c", "d"]);
+		const pos = new Map(dependencyOrder(k).map((id, i) => [id, i] as const));
+		for (const e of data.edges) if (e.hard) expect(pos.get(e.prereq)!).toBeLessThan(pos.get(e.topic)!);
+	});
+
+	it("空进度从依赖链的头开始", () => {
+		expect(frontier(small, {}, NOW)).toBe("a");
+		expect(frontier(small, { a: { stars: 1 } }, NOW)).toBe("b");
+	});
+
+	it("按年级找：这一年级的先修在别的年级没学时，没有可学的就返回 null", () => {
+		expect(frontier(small, {}, NOW, 2)).toBeNull();
+		expect(frontier(small, { a: { stars: 1 } }, NOW, 2)).toBe("b");
+		expect(frontier(small, { a: { stars: 1 } }, NOW, 1)).toBe("c");
+	});
+
+	it("没有空地时找最早的没建完的；全建完返回 null", () => {
+		const p: Progress = { a: { stars: 3 }, b: { stars: 1 }, c: { stars: 2 }, d: { stars: 1 } };
+		expect(frontier(small, p, NOW)).toBe("b");
+		const done: Progress = { a: { stars: 3 }, b: { stars: 3 }, c: { stars: 3 }, d: { stars: 3 } };
+		expect(frontier(small, done, NOW)).toBeNull();
+	});
+
+	it("真实数据：空进度的第一站是没先修的一年级知识点", () => {
+		const f = frontier(k, {}, NOW);
+		expect(f).not.toBeNull();
+		expect(k.topic(f!).grade).toBe(1);
+		expect(k.prereq.get(f!)).toEqual([]);
+		expect(status(k, {}, f!, NOW)).toBe("open");
 	});
 });

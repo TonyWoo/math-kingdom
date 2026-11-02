@@ -733,11 +733,7 @@ export class KingdomScene implements View {
 		this.data.villages.forEach((v, i) => this.plazasMesh.setMatrixAt(i, show(v.grade) ? this.plazasBase[i] : zero));
 		this.plazasMesh.instanceMatrix.needsUpdate = true;
 		if (this.lastMarks.length) this.villages(this.lastMarks);
-		// 镜头拉到能看见整圈的位置：筛选后这一圈就是整张地图
-		if (grade !== null) {
-			const ring = ringOf(this.data, grade);
-			this.flyTo(new THREE.Vector3(0, BASE_H, 0), Math.min(64, Math.max(16, ring.r2 * SCALE * 2.9)));
-		}
+		// 镜头由界面层决定（定位到这个年级最早的未学内容），这里只管显隐
 	}
 
 	goHome(): void {

@@ -116,6 +116,45 @@ export function needsCare(k: Kingdom, progress: Progress, now: number): string[]
 		.sort((a, b) => (progress[a].due ?? 0) - (progress[b].due ?? 0));
 }
 
+// 依赖顺序：先修永远排在后面知识点之前（拓扑排序）；互相没有依赖关系的，按教材顺序排。
+// 教材顺序本身不保证这一点（写教材时不会严格按先修排），所以要单独算。
+export function dependencyOrder(k: Kingdom): string[] {
+	const index = new Map(k.order.map((id, i) => [id, i] as const));
+	const pending = new Map(k.order.map((id) => [id, k.prereq.get(id)!.length] as const));
+	const ready = k.order.filter((id) => pending.get(id) === 0);
+	const out: string[] = [];
+	while (ready.length) {
+		ready.sort((a, b) => index.get(a)! - index.get(b)!);
+		const id = ready.shift()!;
+		out.push(id);
+		for (const n of k.next.get(id)!) {
+			pending.set(n, pending.get(n)! - 1);
+			if (pending.get(n) === 0) ready.push(n);
+		}
+	}
+	// 万一有环（数据问题），剩下的按教材顺序补齐，保证不丢知识点
+	if (out.length < k.order.length) {
+		const seen = new Set(out);
+		for (const id of k.order) if (!seen.has(id)) out.push(id);
+	}
+	return out;
+}
+
+// “接下来该学什么”：按依赖顺序找最早的未学内容。
+// 先找空地（先修都学会了、自己还没开始）；没有空地时找最早的没建完的（已开始、不到 3 星、不是迷雾）；
+// 都没有就返回 null（这个范围全学完了）。grade 给了就只在那个年级里找。
+export function frontier(k: Kingdom, progress: Progress, now: number, grade?: number | null): string | null {
+	const inGrade = (id: string) => grade === undefined || grade === null || k.topic(id).grade === grade;
+	const order = dependencyOrder(k);
+	for (const id of order) {
+		if (inGrade(id) && status(k, progress, id, now) === "open") return id;
+	}
+	for (const id of order) {
+		if (inGrade(id) && stars(progress, id) < 3 && status(k, progress, id, now) !== "locked") return id;
+	}
+	return null;
+}
+
 function hash(s: string): number {
 	let h = 2166136261;
 	for (let i = 0; i < s.length; i++) {
