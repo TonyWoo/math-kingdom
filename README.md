@@ -11,6 +11,13 @@
 - **地基不稳时寻根**：同一步连续失败两次，会列出需要先巩固的先修知识点。
 - **适合小朋友**：大号数字键盘，题目可以朗读，平板和手机都能用。
 
+## 两种视角
+
+- **地图视角**（默认）：从空中俯看整座岛，拖动平移、缩放，点地块看详情。
+- **第一人称**（顶栏的「第一人称」按钮，或网址加 `?view=fp`）：整个王国变成方块世界，可以走进去。电脑上点一下画面锁定鼠标，WASD 移动、鼠标看、空格跳、Shift 跑，准星对着地块点击或按 E 打开详情，Esc 释放鼠标；手机上左半屏拖动走路、右半屏拖动转头，轻点地块打开详情。方块贴图都是代码生成的原创像素图。
+
+两种视角共用同一份进度，随时可以切换。
+
 ## 快速开始
 
 需要 Node.js 20 以上。
@@ -28,7 +35,7 @@ npm run build      # 打包到 dist/，是纯静态网站
 
 ## 部署
 
-推送到 `main` 后，GitHub Actions 自动测试、构建并发布到 GitHub Pages。第一次使用前，要在仓库的 Settings → Pages 里把 Source 设成 **GitHub Actions**。`dist/` 是纯静态文件，也可以放到任何静态服务器上。
+`npm run build` 生成的 `dist/` 是纯静态文件，放到任何静态服务器上就能用（仓库是私有的，GitHub Pages 用不了）。每次推送 GitHub Actions 都会跑测试和构建。
 
 ## 数据
 
@@ -62,7 +69,9 @@ npm test
 Directions are curriculum domains, distance from the castle is the grade, each textbook unit is a village and each of
 the 284 knowledge points is a plot. Plots stay in fog until their prerequisites are learned; each plot is built in three
 steps (foundation, house, golden roof on a later day); buildings ask for review on a spaced schedule and grow weeds or
-get a goblin when neglected. Stars are never taken away. Built with Vite, TypeScript and three.js; progress is stored in
+get a goblin when neglected. Stars are never taken away. Besides the overhead map there is a first-person mode
+(`?view=fp` or the 第一人称 button) where the kingdom becomes a walkable block world with original, code-generated pixel
+textures: WASD and mouse on desktop, a touch joystick on phones. Built with Vite, TypeScript and three.js; progress is stored in
 the browser.
 
 ```bash

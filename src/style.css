@@ -27,12 +27,14 @@ body {
 	user-select: none;
 }
 
-#scene {
+#scene,
+#voxel {
 	position: fixed;
 	inset: 0;
 }
 
-#scene canvas {
+#scene canvas,
+#voxel canvas {
 	display: block;
 	touch-action: none;
 }
@@ -768,4 +770,92 @@ dialog a {
 	50% {
 		transform: translateY(-10px);
 	}
+}
+
+/* 第一人称（方块世界） */
+.btn.fp {
+	background: #3a8a4a;
+}
+
+body.fp-mode #view,
+body.fp-mode .legend {
+	display: none;
+}
+
+#voxel canvas {
+	image-rendering: pixelated;
+}
+
+.crosshair {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 22px;
+	height: 22px;
+	margin: -11px 0 0 -11px;
+	pointer-events: none;
+	background:
+		linear-gradient(#fff, #fff) center / 2px 22px no-repeat,
+		linear-gradient(#fff, #fff) center / 22px 2px no-repeat;
+	filter: drop-shadow(0 0 1px #000);
+}
+
+.fp-hint {
+	position: absolute;
+	left: 50%;
+	top: calc(50% + 28px);
+	transform: translateX(-50%);
+	padding: 6px 14px;
+	border-radius: 8px;
+	background: rgba(20, 24, 40, 0.75);
+	color: #fff;
+	font-size: 15px;
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.fp-help {
+	position: absolute;
+	left: 50%;
+	bottom: 90px;
+	transform: translateX(-50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 12px 20px;
+	border-radius: 12px;
+	background: rgba(20, 24, 40, 0.75);
+	color: #fff;
+	font-size: 14px;
+	text-align: center;
+	pointer-events: none;
+}
+
+.fp-help b {
+	font-size: 18px;
+	color: #ffe08a;
+}
+
+.joystick {
+	position: fixed;
+	width: 110px;
+	height: 110px;
+	margin: -55px 0 0 -55px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.18);
+	border: 2px solid rgba(255, 255, 255, 0.5);
+	pointer-events: none;
+	z-index: 15;
+}
+
+.joystick i {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 46px;
+	height: 46px;
+	margin: -23px 0 0 -23px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.7);
 }

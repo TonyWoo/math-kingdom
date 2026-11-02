@@ -12,7 +12,7 @@ import { answerCount } from "../core/judge";
 import { type Outcome, type Plan, QuizSession, planFor } from "../core/quiz";
 import * as save from "../core/save";
 import type { Question } from "../core/types";
-import type { KingdomScene } from "../scene/kingdom-scene";
+import type { View } from "../scene/view";
 
 const GRADE_NAME = ["一年级", "二年级", "三年级", "四年级", "五年级", "六年级"];
 const BUILDING_NAME = { mill: "磨坊", library: "图书馆", watchtower: "瞭望塔", market: "集市", plaza: "广场" };
@@ -49,7 +49,7 @@ interface QuizState {
 
 export class App {
 	private k: Kingdom;
-	private scene: KingdomScene;
+	private scene: View;
 	private progress: Progress;
 	private demo: boolean;
 	private selected: string | null = null;
@@ -57,7 +57,7 @@ export class App {
 	private dayOffset: number;
 	private toastTimer = 0;
 
-	constructor(k: Kingdom, scene: KingdomScene) {
+	constructor(k: Kingdom, scene: View) {
 		this.k = k;
 		this.scene = scene;
 		const params = new URLSearchParams(location.search);
@@ -71,26 +71,48 @@ export class App {
 			this.demo = saved?.demo ?? false;
 		}
 
-		scene.onPick = (id) => (id ? this.open(id, false) : this.close());
-		scene.refresh(this.progress, this.now());
+		this.attach(scene);
 		this.setupChrome();
 		this.render();
 
 		const focus = Number(params.get("focus"));
 		const select = params.get("select");
 		if (select && k.topics.has(select)) {
-			scene.lookAt(scene.plotPosition(select), 8);
+			scene.focusPlot(select, true);
 			this.open(select, false);
 		} else if (focus >= 1 && focus <= 6) {
-			scene.lookAt(scene.gradePosition(focus), 14);
+			scene.focusGrade(focus, true);
 		} else {
 			// 从“开拓前线”开始：教材顺序里第一块空地
 			const frontier = k.order.find((id) => status(k, this.progress, id, this.now()) === "open") ?? k.order[0];
-			scene.lookAt(scene.plotPosition(frontier), 9);
+			scene.focusPlot(frontier, true);
 			if (Object.keys(this.progress).length === 0) {
 				this.toast(`欢迎来到数学王国！从王城旁边的「${k.topic(frontier).name}」开始建造吧。`, 6000);
 			}
 		}
+	}
+
+	// 接上一个视角：点选回调、当前进度
+	private attach(view: View): void {
+		view.onPick = (id) => (id ? this.open(id, false) : this.close());
+		view.refresh(this.progress, this.now());
+	}
+
+	// 切换视角（地图 ↔ 第一人称）：新视角同步进度和选中的地块，并把镜头或玩家带到选中的地块
+	setView(view: View): void {
+		if (view === this.scene) return;
+		this.scene.show(false);
+		this.scene = view;
+		this.attach(view);
+		view.show(true);
+		view.select(this.selected);
+		if (this.selected) view.focusPlot(this.selected, true);
+		view.panelChanged(!$("panel").hidden);
+		this.updateInset();
+	}
+
+	get view(): View {
+		return this.scene;
 	}
 
 	now(): number {
@@ -107,13 +129,14 @@ export class App {
 			const b = document.createElement("button");
 			b.className = "btn";
 			b.textContent = name;
-			b.onclick = () => this.scene.flyTo(this.scene.gradePosition(i + 1), 14);
+			b.onclick = () => this.scene.focusGrade(i + 1);
 			grades.appendChild(b);
 		});
-		$("home").onclick = () => this.scene.flyTo(this.scene.plotPosition(this.k.order[0]).set(0, 1, 0), 34);
+		$("home").onclick = () => this.scene.goHome();
 		$("view").onclick = () => {
-			const top = this.scene.toggleTopDown();
-			$("view").textContent = top ? "斜视" : "俯视";
+			const s = this.scene as View & { toggleTopDown?: () => boolean };
+			if (!s.toggleTopDown) return;
+			$("view").textContent = s.toggleTopDown() ? "斜视" : "俯视";
 		};
 		$("patrol").onclick = () => {
 			const list = needsCare(this.k, this.progress, this.now());
@@ -174,8 +197,7 @@ export class App {
 
 	// 当前镜头对着哪个年级（每帧调用）
 	tick(): void {
-		const t = this.scene.controls.target;
-		const r = Math.hypot(t.x, t.z) * 100;
+		const r = this.scene.radius();
 		const rings = this.k.data.rings;
 		const buttons = $("grades").children;
 		for (let i = 0; i < rings.length; i++) {
@@ -192,7 +214,7 @@ export class App {
 		this.quiz = null;
 		this.selected = id;
 		this.scene.select(id);
-		if (fly) this.scene.flyTo(this.scene.plotPosition(id), 7);
+		if (fly) this.scene.focusPlot(id);
 		this.renderPanel();
 	}
 
@@ -202,6 +224,7 @@ export class App {
 		this.selected = null;
 		this.scene.select(null);
 		$("panel").hidden = true;
+		this.scene.panelChanged(false);
 		this.updateInset();
 	}
 
@@ -226,6 +249,7 @@ export class App {
 			panel.innerHTML = this.topicHtml();
 		}
 		this.bindPanel();
+		this.scene.panelChanged(true);
 		this.updateInset();
 	}
 
@@ -534,7 +558,7 @@ export class App {
 			return;
 		}
 		if (e.key === "Escape") this.close();
-		if (!q && /^[1-6]$/.test(e.key)) this.scene.flyTo(this.scene.gradePosition(Number(e.key)), 14);
+		if (!q && /^[1-6]$/.test(e.key)) this.scene.focusGrade(Number(e.key));
 	}
 
 	toast(msg: string, ms = 3000): void {

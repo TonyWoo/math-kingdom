@@ -7,6 +7,7 @@ import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
 import type { KingdomData } from "../core/types";
 import type { Assets } from "./assets";
+import type { View } from "./view";
 import { createBubble, createBuilding, createGoblin, createOpenMarker, createWeeds, geo, mat } from "./buildings";
 import { BASE_H, COLORS, SCALE, createWorld, terraceHeight } from "./world";
 
@@ -50,7 +51,7 @@ interface Burst {
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const easeOutBack = (t: number) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
 
-export class KingdomScene {
+export class KingdomScene implements View {
 	readonly renderer: THREE.WebGLRenderer;
 	readonly camera: THREE.PerspectiveCamera;
 	readonly controls: MapControls;
@@ -510,6 +511,34 @@ export class KingdomScene {
 		this.labels.setSize(w, h);
 		this.camera.aspect = w / h;
 		this.applyViewOffset();
+	}
+
+	// ---- View 接口：界面通过这些方法操作地图视角 ----
+
+	focusPlot(id: string, immediate = false): void {
+		if (immediate) this.lookAt(this.plotPosition(id), 8);
+		else this.flyTo(this.plotPosition(id), 7);
+	}
+
+	focusGrade(grade: number, immediate = false): void {
+		if (immediate) this.lookAt(this.gradePosition(grade), 14);
+		else this.flyTo(this.gradePosition(grade), 14);
+	}
+
+	goHome(): void {
+		this.flyTo(new THREE.Vector3(0, 1, 0), 34);
+	}
+
+	radius(): number {
+		const t = this.controls.target;
+		return Math.hypot(t.x, t.z) / SCALE;
+	}
+
+	panelChanged(): void {}
+
+	show(visible: boolean): void {
+		this.container.style.display = visible ? "" : "none";
+		if (visible) this.resize();
 	}
 
 	// 镜头离目标的距离（决定显示哪些标签）
