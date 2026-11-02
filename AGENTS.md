@@ -7,11 +7,12 @@
 | 路径 | 内容 |
 | --- | --- |
 | `src/core/` | 纯逻辑，不依赖 three.js 和 DOM：`kingdom.ts`（先修索引、地块状态、演示进度）、`quiz.ts`（建造三步、复习、出题、更新进度）、`judge.ts`（判题）、`save.ts`（存档）、`types.ts` |
-| `src/scene/` | three.js：`world.ts`（岛、台地、王城、森林）、`buildings.ts`（低多边形建筑和装饰，静态零件用 `bake` 合并）、`kingdom-scene.ts`（地块、迷雾、标签、拾取、镜头、动画） |
+| `src/scene/` | three.js：`assets.ts`（加载 `public/art/` 的模型和精灵，静态网格合并、动画零件单独保留，共用一个 palette 材质）、`world.ts`（岛、台地、王城、森林）、`buildings.ts`（建筑和装饰：有资源用模型，没有就用基本几何体拼，静态零件用 `bake` 合并）、`kingdom-scene.ts`（地块、迷雾、标签、拾取、镜头、动画） |
 | `src/ui/app.ts` | HTML 界面：顶栏、年级按钮、详情面板、答题键盘、朗读、设置；持有进度 |
 | `src/data/kingdom.json` | 生成文件（`npm run import`），不要手改 |
 | `scripts/import-taxonomy.mjs` | 导入上游数据并计算地图布局 |
 | `test/` | Vitest 单元测试，只测 `src/core/` 和数据 |
+| `public/art/`、`public/icons/` | 运行时加载的美术资源（CC0）。`art/math-kingdom-art-v1/` 是原始交付包的说明、自检、预览和备用文件，不会被打包 |
 | `docs/art-prompt.md`、`docs/art-reference/` | 给 AI 生成工具的美术资源提示词和参考截图；模型规格（尺寸、原点、朝向、共用 `palette` 材质、动画节点名）以它为准 |
 
 ## 命令
@@ -30,7 +31,8 @@ npm run import -- <cn-math-taxonomy clone>   # 重新生成数据和布局
 2. **`kingdom.json` 只通过导入脚本生成**。改布局就改脚本里的常量后重新生成，并检查已有地块的位置变化（玩家会记得自己的房子在哪里）。
 3. **数据许可证是 CC BY-NC 4.0**，代码是 MIT。不要删掉 README、设置对话框和 LICENSE 里的署名和非商业说明。
 4. **星级永远不扣**：没复习只改变画面（问号、长草、哥布林），不减星。
-5. **性能**：目标是普通平板 60 帧。新建筑零件用 `part()` 加到组里，最后 `bake()` 合并；会动的零件加 `userData.spin / wave / pulse / bob`，不会被合并。大量重复的东西用 `InstancedMesh`。
+5. **性能**：目标是普通平板 60 帧。模型都用 `assets.material` 这一个材质；会动的零件（模型里的 `blades`、`flag`、`pennant`）在 `assets.ts` 里转成 `userData.spin / wave`。大量重复的东西（树、村庄广场、迷雾）用 `InstancedMesh`。程序化的后备建筑用 `part()` 加零件、最后 `bake()` 合并。
+8. **换美术资源**：新模型必须符合 `docs/art-prompt.md` 的规格（原点在底面中心、正面 +Z、只用 `palette` 材质、动画节点名）。加了新模型要加进 `assets.ts` 的 `MODELS`，`test/art.test.ts` 会检查文件和基本规格。
 6. **风格**：Tab 缩进，双引号；注释和界面文字用中文。
 7. **用户可见的变化**同时更新 README 的中文和 English 部分。
 
@@ -38,4 +40,4 @@ npm run import -- <cn-math-taxonomy clone>   # 重新生成数据和布局
 
 - `npm test` 和 `npm run build` 都通过。
 - 实际打开页面看：`npm run build && npx vite preview`，再用 Playwright 截图（无头 Chromium 需要 `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`，软件渲染帧率低，镜头动画要多等几秒）。至少检查：桌面 1280×800 和手机 390×844 两种尺寸；`?demo=1` 的全景；完整答一次题（答错一次看讲解，再全对看建成动画和迷雾散开）；控制台没有报错。
-- 性能：在控制台看 `kingdom.scene.renderer.info.render.calls`。全部 284 块地建满 3 星时大约 830 次绘制调用。
+- 性能：在控制台看 `kingdom.scene.renderer.info.render.calls`。全部 284 块地建满 3 星时大约 560 次绘制调用（程序化后备建筑时约 830 次）。

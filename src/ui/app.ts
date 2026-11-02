@@ -25,10 +25,14 @@ const STATUS_TEXT: Record<Status, string> = {
 	goblin: "被哥布林占领了！复习赶走它",
 };
 const STAGE = {
-	1: { name: "打地基", need: "答对 2 道基础题", icon: "🧱", done: "地基打好了！" },
-	2: { name: "盖房子", need: "答对 1 道标准题", icon: "🏠", done: "房子盖好了！" },
-	3: { name: "升金顶", need: "答对 1 道挑战题", icon: "👑", done: "金顶闪闪发光！" },
+	1: { name: "打地基", need: "答对 2 道基础题", icon: "foundation", done: "地基打好了！" },
+	2: { name: "盖房子", need: "答对 1 道标准题", icon: "house", done: "房子盖好了！" },
+	3: { name: "升金顶", need: "答对 1 道挑战题", icon: "crown", done: "金顶闪闪发光！" },
 } as const;
+
+// 界面图标（public/art/ui/，128×128）。cls 决定显示大小，见 style.css 的 .ic
+const icon = (name: string, cls = "") =>
+	`<img class="ic ${cls}" src="${import.meta.env.BASE_URL}art/ui/icon_${name}.png" alt="" draggable="false">`;
 
 const esc = (s: string) =>
 	s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -114,7 +118,7 @@ export class App {
 		$("patrol").onclick = () => {
 			const list = needsCare(this.k, this.progress, this.now());
 			if (list.length === 0) {
-				this.toast("王国一切安好，没有需要照看的地方 🌟");
+				this.toast("王国一切安好，没有需要照看的地方");
 				return;
 			}
 			this.open(list[0], true);
@@ -160,12 +164,12 @@ export class App {
 		const s = summary(this.k, this.progress, this.now());
 		const built = s.built + s.due + s.weeds + s.goblin;
 		$("stats").innerHTML =
-			`<span>🏠 建成 <b>${built}</b> / ${s.total}</span>` +
-			`<span>⭐ <b>${s.stars}</b></span>` +
-			`<span>🌱 可建造 <b>${s.open}</b></span>` +
+			`<span>${icon("house")}建成 <b>${built}</b> / ${s.total}</span>` +
+			`<span>${icon("star")}<b>${s.stars}</b></span>` +
+			`<span>${icon("foundation")}可建造 <b>${s.open}</b></span>` +
 			(this.demo ? `<span class="muted">演示进度</span>` : "");
 		const care = s.due + s.weeds + s.goblin;
-		$("patrol").innerHTML = `今日巡视${care ? `<span class="badge">${care}</span>` : ""}`;
+		$("patrol").innerHTML = `${icon("patrol")}今日巡视${care ? `<span class="badge">${care}</span>` : ""}`;
 	}
 
 	// 当前镜头对着哪个年级（每帧调用）
@@ -226,7 +230,7 @@ export class App {
 	}
 
 	private starsHtml(n: number): string {
-		return `<span class="stars">${[1, 2, 3].map((i) => `<span class="${i <= n ? "on" : ""}">★</span>`).join("")}</span>`;
+		return `<span class="stars">${[1, 2, 3].map((i) => icon(i <= n ? "star" : "star_empty", "star")).join("")}</span>`;
 	}
 
 	private topicHtml(): string {
@@ -262,21 +266,21 @@ export class App {
 	private actionHtml(plan: Plan): string {
 		switch (plan.kind) {
 			case "locked":
-				return `<button class="btn" disabled>🔒 还在迷雾中</button>
+				return `<button class="btn" disabled>${icon("lock")}还在迷雾中</button>
 					<p class="hint muted">先学会：${plan.missing.map((p) => esc(this.k.topic(p).name)).join("、")}</p>`;
 			case "build": {
 				const s = STAGE[plan.stage];
-				return `<button class="btn primary" data-act="start">${s.icon} 开始建造：${s.name}</button>
+				return `<button class="btn primary" data-act="start">${icon(s.icon)}开始建造：${s.name}</button>
 					<p class="hint muted">${s.need}</p>`;
 			}
 			case "wait":
-				return `<button class="btn ghost" data-act="practice">再练习一下</button>
-					<p class="hint muted">👑 金顶要明天再来：隔天还会，才算真的掌握。</p>`;
+				return `<button class="btn ghost" data-act="practice">${icon("pencil")}再练习一下</button>
+					<p class="hint muted">金顶要明天再来：隔天还会，才算真的掌握。</p>`;
 			case "review":
-				return `<button class="btn warm" data-act="start">🧹 复习：答对 2 道题</button>
+				return `<button class="btn warm" data-act="start">${icon("broom")}复习：答对 2 道题</button>
 					<p class="hint muted">答错不会扣星，只是还要再复习。</p>`;
 			case "practice":
-				return `<button class="btn ghost" data-act="practice">再练习一下</button>
+				return `<button class="btn ghost" data-act="practice">${icon("pencil")}再练习一下</button>
 					<p class="hint muted">这块地已经建满三颗星啦！</p>`;
 		}
 	}
@@ -330,9 +334,9 @@ export class App {
 
 	private stepTitle(): string {
 		const plan = this.quiz!.session.plan;
-		if (plan.kind === "build") return `${STAGE[plan.stage].icon} ${STAGE[plan.stage].name}`;
-		if (plan.kind === "review") return "🧹 复习";
-		return "✏️ 练习";
+		if (plan.kind === "build") return `${icon(STAGE[plan.stage].icon, "sm")}${STAGE[plan.stage].name}`;
+		if (plan.kind === "review") return `${icon("broom", "sm")}复习`;
+		return `${icon("pencil", "sm")}练习`;
 	}
 
 	private quizHtml(): string {
@@ -352,7 +356,7 @@ export class App {
 				<div class="step">${esc(t.name)} · ${this.stepTitle()} · 第 ${Math.min(s.index + (q.answered ? 0 : 1), s.questions.length)} / ${s.questions.length} 题</div>
 				<div class="dots">${dots}</div>
 				<div class="prompt"><span class="text">${esc(question.prompt)}</span>${
-					"speechSynthesis" in window ? '<button class="speak" data-act="speak" title="读题">🔊</button>' : ""
+					"speechSynthesis" in window ? '<button class="speak" data-act="speak" title="读题">${icon("speaker")}</button>' : ""
 				}</div>`;
 		if (question.kind === "choice") {
 			body += `<div class="choices">${question.choices!
@@ -395,7 +399,7 @@ export class App {
 		const last = s.finished;
 		const answer = q.kind === "choice" ? `${q.answer}. ${q.choices!.find((c) => c.key === q.answer)?.text ?? ""}` : q.answer;
 		return `<div class="feedback ${ok ? "right" : "wrong"}">
-				<div class="title">${ok ? "✅ 答对了！" : `🤔 正确答案是 ${esc(answer)}`}</div>
+				<div class="title">${ok ? `${icon("correct")}答对了！` : `${icon("wrong")}正确答案是 ${esc(answer)}`}</div>
 				${q.explanation ? `<div>${esc(q.explanation)}</div>` : ""}
 			</div>
 			<div class="action"><button class="btn primary" data-act="next">${last ? "看结果" : "下一题"}</button></div>`;
@@ -406,17 +410,17 @@ export class App {
 		const o = q.outcome!;
 		const plan = q.session.plan;
 		const t = this.k.topic(q.session.id);
-		let icon = "🎉";
+		let big = "star";
 		let title = "";
 		let text = "";
 		if (o.success) {
 			if (plan.kind === "build") {
-				icon = STAGE[plan.stage].icon;
+				big = STAGE[plan.stage].icon;
 				title = STAGE[plan.stage].done;
 				text = `「${esc(t.name)}」得到了第 ${o.starsAfter} 颗星。`;
 				if (plan.stage === 2) text += "明天再来，答对挑战题就能升金顶。";
 			} else if (plan.kind === "review") {
-				icon = "✨";
+				big = "broom";
 				title = "打扫干净了！";
 				const days = Math.round(((this.progress[q.session.id].due ?? this.now()) - this.now()) / 86400_000);
 				text = `下次复习：${days} 天后。`;
@@ -424,19 +428,19 @@ export class App {
 				title = "全部答对！";
 			}
 		} else {
-			icon = "💪";
+			big = "wrong";
 			title = "差一点！";
 			text = plan.kind === "practice" ? "练习不影响进度。" : "没关系，看看讲解再试一次。";
 		}
 		const roots = o.roots.length
 			? `<h3>地基不稳？先巩固这些</h3>${o.roots
-					.map((p) => `<button class="prereq" data-go="${p}"><span class="tag ${stars(this.progress, p) >= 2 ? "" : "no"}">${stars(this.progress, p)} ★</span>${esc(this.k.topic(p).name)}</button>`)
+					.map((p) => `<button class="prereq" data-go="${p}"><span class="tag ${stars(this.progress, p) >= 2 ? "" : "no"}">${stars(this.progress, p)} 星</span>${esc(this.k.topic(p).name)}</button>`)
 					.join("")}`
 			: "";
 		const again = !o.success && plan.kind !== "practice" ? '<button class="btn primary" data-act="start">再试一次</button>' : "";
 		return `
 			<div class="result">
-				<div class="big">${icon}</div>
+				<div class="big">${icon(big, "xl")}</div>
 				<h2>${title}</h2>
 				<p>${text}</p>
 				${o.success && plan.kind !== "practice" ? this.starsHtml(o.starsAfter) : ""}

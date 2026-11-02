@@ -1,0 +1,1339 @@
+{
+  "version": "1.0.0",
+  "license": "CC0-1.0",
+  "coordinateSystem": {
+    "up": "+Y",
+    "front": "+Z",
+    "origin": "bottom bounding-box center",
+    "units": 1
+  },
+  "models": 37,
+  "totals": {
+    "modelBytes": 718660,
+    "unpackedBytes": 6706419
+  },
+  "files": [
+    {
+      "file": "CHECKLIST.md",
+      "kind": "documentation",
+      "bytes": 2551,
+      "sha256": "cfa090c8b19ff522a1d761a8cdb0ec0ad48effd550ede0d8a019255556f32223"
+    },
+    {
+      "file": "LICENSE.txt",
+      "kind": "documentation",
+      "bytes": 568,
+      "sha256": "28af3d5a03c278e9489088dae5e936163e5e55ef6035eec6567f359cb414a2ed"
+    },
+    {
+      "file": "README.md",
+      "kind": "documentation",
+      "bytes": 2119,
+      "sha256": "cd31fb0333d37ff6e2e355a15574b21c5825c4841545654df7372888efa09bda"
+    },
+    {
+      "file": "app/favicon-64.png",
+      "kind": "app",
+      "width": 64,
+      "height": 64,
+      "bytes": 4736,
+      "sha256": "b79863b5f4c0111f5a26738f7bee1358cf646e9fe96f53c01500d1bd74cf4641"
+    },
+    {
+      "file": "app/icon-192.png",
+      "kind": "app",
+      "width": 192,
+      "height": 192,
+      "bytes": 48529,
+      "sha256": "e4bd8144181109a72633acd1c1245d6971409cfb09638115135f8141899c96a6"
+    },
+    {
+      "file": "app/icon-512.png",
+      "kind": "app",
+      "width": 512,
+      "height": 512,
+      "bytes": 297650,
+      "sha256": "ebc8edc7e47850469a5f930b531f46d3184072446575cf820b1260dc2953daf7"
+    },
+    {
+      "file": "app/icon-maskable-512.png",
+      "kind": "app",
+      "width": 512,
+      "height": 512,
+      "bytes": 280388,
+      "sha256": "e74fe38d41135102a8ea8fb5fbe4bab23747b39b40386c4179bc86daadf8d7e2"
+    },
+    {
+      "file": "app/logo_emblem.png",
+      "kind": "app",
+      "width": 1024,
+      "height": 512,
+      "bytes": 324821,
+      "sha256": "349c477074d853cb3c677ef851c6079082cb99e09b17ee675360dfa48d0c88e7"
+    },
+    {
+      "file": "app/logo_title.png",
+      "kind": "app",
+      "width": 1024,
+      "height": 512,
+      "bytes": 262404,
+      "sha256": "8e4fb063ba801dfb3c93c7ab778def8089be7b3e02ba60cf49b414e7f6321b5c"
+    },
+    {
+      "file": "models/bush.glb",
+      "kind": "model",
+      "triangles": 96,
+      "triangleBudget": 120,
+      "bbox": {
+        "min": [
+          -0.13750000298023224,
+          0.0,
+          -0.11077722162008286
+        ],
+        "max": [
+          0.13750000298023224,
+          0.18356405198574066,
+          0.11077722162008286
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 10444,
+      "sha256": "4f1852b37a5f748859924be0ebd4a8e1382d75755eabcbe19dfc579e04cae494"
+    },
+    {
+      "file": "models/castle.glb",
+      "kind": "model",
+      "triangles": 742,
+      "triangleBudget": 6000,
+      "bbox": {
+        "min": [
+          -2.5,
+          0.0,
+          -2.5
+        ],
+        "max": [
+          2.5,
+          3.559999942779541,
+          2.5
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "flag",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 72984,
+      "sha256": "3a69286ac6fae31ca0a124694eb03fda9227214fd1738fa779033b6244a84395"
+    },
+    {
+      "file": "models/cloud.glb",
+      "kind": "model",
+      "triangles": 180,
+      "triangleBudget": 300,
+      "bbox": {
+        "min": [
+          -0.2847237288951874,
+          0.0,
+          -0.12934313714504242
+        ],
+        "max": [
+          0.2847237288951874,
+          0.28096988797187805,
+          0.12934313714504242
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 18492,
+      "sha256": "b50bac39027556feac3977c2e366e7ad4fbfbfe6a6040b26922a612055c4643e"
+    },
+    {
+      "file": "models/deco_bench.glb",
+      "kind": "model",
+      "triangles": 72,
+      "triangleBudget": 400,
+      "bbox": {
+        "min": [
+          -0.18000000715255737,
+          0.0,
+          -0.08250000327825546
+        ],
+        "max": [
+          0.18000000715255737,
+          0.29499998688697815,
+          0.08250000327825546
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 8084,
+      "sha256": "6108b0d61d5370dd262c423f6296580c4fe0a2392357da90ecbffbb9226495d3"
+    },
+    {
+      "file": "models/deco_flowerbed.glb",
+      "kind": "model",
+      "triangles": 184,
+      "triangleBudget": 400,
+      "bbox": {
+        "min": [
+          -0.18000000715255737,
+          0.0,
+          -0.11999999731779099
+        ],
+        "max": [
+          0.18000000715255737,
+          0.12531088292598724,
+          0.11999999731779099
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 18820,
+      "sha256": "98fc41d044062a384c6902630e5d7f40b500b35b5dc84ee41909968bf74723b0"
+    },
+    {
+      "file": "models/deco_fountain.glb",
+      "kind": "model",
+      "triangles": 160,
+      "triangleBudget": 400,
+      "bbox": {
+        "min": [
+          -0.18000000715255737,
+          0.0,
+          -0.18000000715255737
+        ],
+        "max": [
+          0.18000000715255737,
+          0.239641010761261,
+          0.18000000715255737
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 16516,
+      "sha256": "e8c9bbc6695c97a74ea0b85bd31ec34db4c12bb543fbf1ae7c10bb5e75b723a8"
+    },
+    {
+      "file": "models/deco_lamp.glb",
+      "kind": "model",
+      "triangles": 66,
+      "triangleBudget": 400,
+      "bbox": {
+        "min": [
+          -0.07999999821186066,
+          0.0,
+          -0.07999999821186066
+        ],
+        "max": [
+          0.07999999821186066,
+          0.5,
+          0.07999999821186066
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 7476,
+      "sha256": "70dfa1c93a5a81c4bfae66119bfbc0acabb2efd52a0e4414ba42f76c8e35c023"
+    },
+    {
+      "file": "models/deco_statue.glb",
+      "kind": "model",
+      "triangles": 76,
+      "triangleBudget": 400,
+      "bbox": {
+        "min": [
+          -0.14000000059604645,
+          0.0,
+          -0.14000000059604645
+        ],
+        "max": [
+          0.14000000059604645,
+          0.4300000071525574,
+          0.14000000059604645
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 8452,
+      "sha256": "f506efa1d733017763dcdd45c56c2df6885836a077c8303a35668a2dca1c66d6"
+    },
+    {
+      "file": "models/deco_well.glb",
+      "kind": "model",
+      "triangles": 104,
+      "triangleBudget": 400,
+      "bbox": {
+        "min": [
+          -0.1850000023841858,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          0.1850000023841858,
+          0.4300000071525574,
+          0.15000000596046448
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 11136,
+      "sha256": "10b2886eaddf968a31c0d71626cf03401b4b61a000d0b2ab55274464ffe7b153"
+    },
+    {
+      "file": "models/defense_tower.glb",
+      "kind": "model",
+      "triangles": 82,
+      "triangleBudget": 800,
+      "bbox": {
+        "min": [
+          -0.20000000298023224,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          0.20000000298023224,
+          0.6899999976158142,
+          0.20000000298023224
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 9028,
+      "sha256": "97eb4044f32a83d5cd1946ee1aa1a3b5354807e0ea844c325ce66b77d611b5cf"
+    },
+    {
+      "file": "models/enemy_catapult.glb",
+      "kind": "model",
+      "triangles": 336,
+      "triangleBudget": 1000,
+      "bbox": {
+        "min": [
+          -0.17499999701976776,
+          0.0,
+          -0.18250000476837158
+        ],
+        "max": [
+          0.17499999701976776,
+          0.3898233473300934,
+          0.1824999898672104
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "arm",
+          "axis": "x"
+        }
+      ],
+      "material": "palette",
+      "bytes": 34140,
+      "sha256": "351a6e57f5e67d554d2a940ffc0b2da17d60bc6b369d3a78fd2e9f0cae039800"
+    },
+    {
+      "file": "models/enemy_knight.glb",
+      "kind": "model",
+      "triangles": 244,
+      "triangleBudget": 1000,
+      "bbox": {
+        "min": [
+          -0.13969595730304718,
+          0.0,
+          -0.08488190174102783
+        ],
+        "max": [
+          0.139695942401886,
+          0.3499999940395355,
+          0.08488190174102783
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 24616,
+      "sha256": "ea201c00141b603b96c245c6a78d53aa1f42d9bea0271f30cae9370d98fa9fa5"
+    },
+    {
+      "file": "models/enemy_wolf.glb",
+      "kind": "model",
+      "triangles": 220,
+      "triangleBudget": 800,
+      "bbox": {
+        "min": [
+          -0.07050000131130219,
+          0.0,
+          -0.2196725308895111
+        ],
+        "max": [
+          0.07050000131130219,
+          0.24899999797344208,
+          0.2196725308895111
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 22312,
+      "sha256": "44fc67e21af1244031df6623ab26d0fdbbecf0935b46aced07ebc81724179b95"
+    },
+    {
+      "file": "models/goblin.glb",
+      "kind": "model",
+      "triangles": 184,
+      "triangleBudget": 800,
+      "bbox": {
+        "min": [
+          -0.1273723691701889,
+          0.0,
+          -0.05514806509017944
+        ],
+        "max": [
+          0.1273723691701889,
+          0.28782379627227783,
+          0.05514806881546974
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 18856,
+      "sha256": "997b7b3cc3852236f9eb040813d859e6a93d379402e84d0fecf66ddfdfad65ad"
+    },
+    {
+      "file": "models/library_1.glb",
+      "kind": "model",
+      "triangles": 132,
+      "triangleBudget": 600,
+      "bbox": {
+        "min": [
+          -0.24500000476837158,
+          0.0,
+          -0.20250000059604645
+        ],
+        "max": [
+          0.24500000476837158,
+          0.33000001311302185,
+          0.20250000059604645
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 13848,
+      "sha256": "ad1ed07b88cf34e34fc9208110545e7cbdcc38c5bff2d56cc4b5b84625ae7582"
+    },
+    {
+      "file": "models/library_2.glb",
+      "kind": "model",
+      "triangles": 208,
+      "triangleBudget": 1200,
+      "bbox": {
+        "min": [
+          -0.28999999165534973,
+          0.0,
+          -0.23900000751018524
+        ],
+        "max": [
+          0.28999999165534973,
+          0.6119999885559082,
+          0.23900000751018524
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 21140,
+      "sha256": "dd63c21979e9f767d386623727538749e3fedc65b9dc3a8bef08ade4b663cace"
+    },
+    {
+      "file": "models/library_3.glb",
+      "kind": "model",
+      "triangles": 333,
+      "triangleBudget": 1500,
+      "bbox": {
+        "min": [
+          -0.28999999165534973,
+          0.0,
+          -0.23900000751018524
+        ],
+        "max": [
+          0.28999999165534973,
+          0.7419999837875366,
+          0.23900000751018524
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 33768,
+      "sha256": "21b2a2a8c460850d69b7a52aff16c3323ff544be95e0c624c5c0875fa2334972"
+    },
+    {
+      "file": "models/market_1.glb",
+      "kind": "model",
+      "triangles": 132,
+      "triangleBudget": 600,
+      "bbox": {
+        "min": [
+          -0.24500000476837158,
+          0.0,
+          -0.20250000059604645
+        ],
+        "max": [
+          0.24500000476837158,
+          0.33000001311302185,
+          0.20250000059604645
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 13848,
+      "sha256": "0cc5100f6d91fc6bbbac740dcde0af2801576c68e8895697e52c65091449aaae"
+    },
+    {
+      "file": "models/market_2.glb",
+      "kind": "model",
+      "triangles": 384,
+      "triangleBudget": 1200,
+      "bbox": {
+        "min": [
+          -0.2750000059604645,
+          0.0,
+          -0.2120000123977661
+        ],
+        "max": [
+          0.2750000059604645,
+          0.5299999713897705,
+          0.21199998259544373
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 38040,
+      "sha256": "f77e763f7a182ed15f237e5c3df2e61e7f5c44301661fe58cc8603aebf9cb64b"
+    },
+    {
+      "file": "models/market_3.glb",
+      "kind": "model",
+      "triangles": 509,
+      "triangleBudget": 1500,
+      "bbox": {
+        "min": [
+          -0.2750000059604645,
+          0.0,
+          -0.2120000123977661
+        ],
+        "max": [
+          0.2750000059604645,
+          0.6349999904632568,
+          0.21199998259544373
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 50664,
+      "sha256": "8caf8a9868f65fec3114b95d51054e00b9c6644dfd2c0f0d6a68ec1afa344609"
+    },
+    {
+      "file": "models/mill_1.glb",
+      "kind": "model",
+      "triangles": 136,
+      "triangleBudget": 600,
+      "bbox": {
+        "min": [
+          -0.23000000417232513,
+          0.0,
+          -0.2199999988079071
+        ],
+        "max": [
+          0.23000000417232513,
+          0.33000001311302185,
+          0.2199999988079071
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 14212,
+      "sha256": "5519c14bc02e68980accafae6b32bcf165cbb65404d17677110db1c8893b715a"
+    },
+    {
+      "file": "models/mill_2.glb",
+      "kind": "model",
+      "triangles": 242,
+      "triangleBudget": 1200,
+      "bbox": {
+        "min": [
+          -0.2549999952316284,
+          0.0,
+          -0.21376590430736542
+        ],
+        "max": [
+          0.2549999952316284,
+          0.6850000023841858,
+          0.21376590430736542
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "blades",
+          "axis": "z"
+        }
+      ],
+      "material": "palette",
+      "bytes": 25080,
+      "sha256": "3d63ed018b3afa201a1a786cdf958f3734dc1f74fe3af49015bf5c89bcf2777e"
+    },
+    {
+      "file": "models/mill_3.glb",
+      "kind": "model",
+      "triangles": 367,
+      "triangleBudget": 1500,
+      "bbox": {
+        "min": [
+          -0.2549999952316284,
+          0.0,
+          -0.21376590430736542
+        ],
+        "max": [
+          0.2549999952316284,
+          0.8050000071525574,
+          0.21376590430736542
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "blades",
+          "axis": "z"
+        },
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 37700,
+      "sha256": "a92a751c89bb6f49ca9e65e8945d95b25ee783222a7d491f2844b34e960f462e"
+    },
+    {
+      "file": "models/plaza_1.glb",
+      "kind": "model",
+      "triangles": 120,
+      "triangleBudget": 600,
+      "bbox": {
+        "min": [
+          -0.24500000476837158,
+          0.0,
+          -0.20250000059604645
+        ],
+        "max": [
+          0.24500000476837158,
+          0.33000001311302185,
+          0.20250000059604645
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 12696,
+      "sha256": "92d82d53ed73465c2c25bfac65aa7386039c4db0879fec2fa866497cff19bfc3"
+    },
+    {
+      "file": "models/plaza_2.glb",
+      "kind": "model",
+      "triangles": 226,
+      "triangleBudget": 1200,
+      "bbox": {
+        "min": [
+          -0.2627999782562256,
+          0.0,
+          -0.22499999403953552
+        ],
+        "max": [
+          0.2627999782562256,
+          0.75,
+          0.22499999403953552
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "flag",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 23544,
+      "sha256": "7fa1c3a19f33a6f05a15fe7e16400cfd09b78911b1e6f88c6ed196ab76f710d7"
+    },
+    {
+      "file": "models/plaza_3.glb",
+      "kind": "model",
+      "triangles": 351,
+      "triangleBudget": 1500,
+      "bbox": {
+        "min": [
+          -0.27230000495910645,
+          0.0,
+          -0.2265525460243225
+        ],
+        "max": [
+          0.27230000495910645,
+          0.8899999856948853,
+          0.2265525609254837
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "flag",
+          "axis": "y"
+        },
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 36224,
+      "sha256": "a1db5a2107920f21fd32a7cf019a95511cbd9780f65a24f22e0729c377fb7815"
+    },
+    {
+      "file": "models/rock_1.glb",
+      "kind": "model",
+      "triangles": 32,
+      "triangleBudget": 100,
+      "bbox": {
+        "min": [
+          -0.17000000178813934,
+          0.0,
+          -0.11258330196142197
+        ],
+        "max": [
+          0.17000000178813934,
+          0.19918584823608398,
+          0.11258330196142197
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 4276,
+      "sha256": "3e9f443d359e767d740358637b36f6e5d6d2cdf756df1ddfabfb5a6db7e549d9"
+    },
+    {
+      "file": "models/rock_2.glb",
+      "kind": "model",
+      "triangles": 32,
+      "triangleBudget": 100,
+      "bbox": {
+        "min": [
+          -0.10999999940395355,
+          0.0,
+          -0.12124355882406235
+        ],
+        "max": [
+          0.10999999940395355,
+          0.277128130197525,
+          0.12124355882406235
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 4276,
+      "sha256": "6944631c5b4e6e4b48a41a45f190bf9d90d6ccc0d6cc4ee71aeb59a8c6b5f10c"
+    },
+    {
+      "file": "models/signpost.glb",
+      "kind": "model",
+      "triangles": 24,
+      "triangleBudget": 150,
+      "bbox": {
+        "min": [
+          -0.10999999940395355,
+          0.0,
+          -0.020999999716877937
+        ],
+        "max": [
+          0.10999999940395355,
+          0.33500000834465027,
+          0.020999999716877937
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 3472,
+      "sha256": "5ba24581bc94c27b150f5cdb3aa8c40fe62ad7d418f7852795054a04e72a2307"
+    },
+    {
+      "file": "models/tree_blossom.glb",
+      "kind": "model",
+      "triangles": 116,
+      "triangleBudget": 200,
+      "bbox": {
+        "min": [
+          -0.29500001668930054,
+          0.0,
+          -0.1905255913734436
+        ],
+        "max": [
+          0.29499998688697815,
+          0.8765063285827637,
+          0.1905255913734436
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 12308,
+      "sha256": "5fd9d3dd8b271bd0685f9d70e1d42a55f8daecce93693ad68e13cfa826be92b1"
+    },
+    {
+      "file": "models/tree_pine.glb",
+      "kind": "model",
+      "triangles": 50,
+      "triangleBudget": 200,
+      "bbox": {
+        "min": [
+          -0.23000000417232513,
+          0.0,
+          -0.19918584823608398
+        ],
+        "max": [
+          0.23000000417232513,
+          0.8899999856948853,
+          0.19918584823608398
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 5976,
+      "sha256": "02bd50740bdc0ae081a13ca64b8066ecc25a264245271fed105762dec4e1a0cc"
+    },
+    {
+      "file": "models/tree_round.glb",
+      "kind": "model",
+      "triangles": 116,
+      "triangleBudget": 200,
+      "bbox": {
+        "min": [
+          -0.29500001668930054,
+          0.0,
+          -0.1905255913734436
+        ],
+        "max": [
+          0.29499998688697815,
+          0.8765063285827637,
+          0.1905255913734436
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 12308,
+      "sha256": "167ac5724c2ec070e8fe723f11d39e761cfe2550d4d89fe9315ac5851cbb3663"
+    },
+    {
+      "file": "models/village_plaza.glb",
+      "kind": "model",
+      "triangles": 68,
+      "triangleBudget": 300,
+      "bbox": {
+        "min": [
+          -0.20999999344348907,
+          0.0,
+          -0.20999999344348907
+        ],
+        "max": [
+          0.20999999344348907,
+          0.33500000834465027,
+          0.20999999344348907
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 7684,
+      "sha256": "8232924eb2007287300123278a2663abe2386059e538cb5e64cfb347294ceaf4"
+    },
+    {
+      "file": "models/watchtower_1.glb",
+      "kind": "model",
+      "triangles": 140,
+      "triangleBudget": 600,
+      "bbox": {
+        "min": [
+          -0.23000000417232513,
+          0.0,
+          -0.19375000894069672
+        ],
+        "max": [
+          0.23000000417232513,
+          0.5199999809265137,
+          0.19374999403953552
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 14616,
+      "sha256": "350d1897599377d85051bee3d12d2f36c18331545f1b5c004366ba25ad7caa69"
+    },
+    {
+      "file": "models/watchtower_2.glb",
+      "kind": "model",
+      "triangles": 178,
+      "triangleBudget": 1000,
+      "bbox": {
+        "min": [
+          -0.26499998569488525,
+          0.0,
+          -0.26499998569488525
+        ],
+        "max": [
+          0.26499998569488525,
+          0.9800000190734863,
+          0.26499998569488525
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 18244,
+      "sha256": "ade7d557f00e80951553de47829f95f1755208ed105cde3a2f6041f1644e530c"
+    },
+    {
+      "file": "models/watchtower_3.glb",
+      "kind": "model",
+      "triangles": 303,
+      "triangleBudget": 1500,
+      "bbox": {
+        "min": [
+          -0.26499998569488525,
+          0.0,
+          -0.26499998569488525
+        ],
+        "max": [
+          0.26499998569488525,
+          1.1100000143051147,
+          0.26499998569488525
+        ]
+      },
+      "animatedNodes": [
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ],
+      "material": "palette",
+      "bytes": 30852,
+      "sha256": "5a58b35fd9801d9413ac19cfd9d19ff93bfc3a143cf0e2ac3ca0a38865fdae6e"
+    },
+    {
+      "file": "models/weeds.glb",
+      "kind": "model",
+      "triangles": 14,
+      "triangleBudget": 200,
+      "bbox": {
+        "min": [
+          -0.06866378337144852,
+          0.0,
+          -0.05965547636151314
+        ],
+        "max": [
+          0.06866378337144852,
+          0.18000000715255737,
+          0.059655480086803436
+        ]
+      },
+      "animatedNodes": [],
+      "material": "palette",
+      "bytes": 2528,
+      "sha256": "4ffd146fd3172ae2ad0eec7133318e80e0a60e1b07adfa713effc6e35388753b"
+    },
+    {
+      "file": "preview/browser_validation.json",
+      "kind": "metadata",
+      "bytes": 6379,
+      "sha256": "54909b2127793a9f66e2ba88d736d547fccdbc269e884d884107437cbd8d3a27"
+    },
+    {
+      "file": "preview/models_sheet.png",
+      "kind": "preview",
+      "width": 1200,
+      "height": 1760,
+      "bytes": 455970,
+      "sha256": "a3400fc0bf7bcab29360fcc8c020f53a53eaf315fc52bcef4e87f140a21ef345"
+    },
+    {
+      "file": "preview/technical_checks.json",
+      "kind": "metadata",
+      "bytes": 9165,
+      "sha256": "f5871e097a0194a37f001f22cb2900e4c2054d7d8746fe4a7059d7b6e79010f3"
+    },
+    {
+      "file": "preview/ui_sheet.png",
+      "kind": "preview",
+      "width": 900,
+      "height": 570,
+      "bytes": 189761,
+      "sha256": "5dcebacc791f5c6ccc04ec2d9288cf3d3d138ba0b76ed97463c2796b43634e7f"
+    },
+    {
+      "file": "preview/validation.json",
+      "kind": "metadata",
+      "bytes": 49659,
+      "sha256": "b6fa2892a0f6ec42b2c409c0142ad3853248f0c1f2c11ac1e129e6a2e5b16ddf"
+    },
+    {
+      "file": "promo/hero_1920x1080.png",
+      "kind": "promo",
+      "width": 1920,
+      "height": 1080,
+      "bytes": 3003361,
+      "sha256": "955927b559cce4ee0fd7651253af93ad25725fa15ec8837fda5d8e3000b7550b"
+    },
+    {
+      "file": "sprites/bubble_alert.png",
+      "kind": "sprite",
+      "width": 128,
+      "height": 128,
+      "bytes": 2792,
+      "sha256": "7c83756876e531436a3f7e3f0909f40de19b384588e35343db6cc3cbc038280f"
+    },
+    {
+      "file": "sprites/bubble_review.png",
+      "kind": "sprite",
+      "width": 128,
+      "height": 128,
+      "bytes": 3469,
+      "sha256": "af2d723b15c3e490ac26106e0e3c3d90a9c15d90e14588722a54ac637d2b20e2"
+    },
+    {
+      "file": "sprites/cloud_soft.png",
+      "kind": "sprite",
+      "width": 256,
+      "height": 256,
+      "bytes": 7588,
+      "sha256": "be5bd2948546e6e2f7f3033ab6fba31ea6fd685e01b0a11535d1004f35c16d39"
+    },
+    {
+      "file": "sprites/particle_sparkle.png",
+      "kind": "sprite",
+      "width": 64,
+      "height": 64,
+      "bytes": 958,
+      "sha256": "acbc744fdabe63ca1fa542c1951614bb87353629c7e60b15d5c9800e9c517c1e"
+    },
+    {
+      "file": "sprites/particle_star.png",
+      "kind": "sprite",
+      "width": 64,
+      "height": 64,
+      "bytes": 1422,
+      "sha256": "8cf5105f09de4d5728c80a10be772760ccca07791d5d22b52816da7248dc3100"
+    },
+    {
+      "file": "textures/palette.json",
+      "kind": "metadata",
+      "bytes": 6486,
+      "sha256": "1f39bf55dd0dc6c4e210aadff99bea32a11b3f6225b4963d7bed63bf6caa887f"
+    },
+    {
+      "file": "textures/palette.png",
+      "kind": "texture",
+      "width": 256,
+      "height": 256,
+      "bytes": 965,
+      "sha256": "1833e6415171ab3826dea3e6cdf5c03deee0654281d72996b2d2a179608595f6"
+    },
+    {
+      "file": "textures/road.png",
+      "kind": "texture",
+      "width": 256,
+      "height": 256,
+      "bytes": 3140,
+      "sha256": "465d418af27ef9d0aaf0e2295cb82f64662222948bea543f19e09d7823896ecb"
+    },
+    {
+      "file": "textures/sea.png",
+      "kind": "texture",
+      "width": 512,
+      "height": 512,
+      "bytes": 8867,
+      "sha256": "d3076f84de8c70ceb59323bb92023436eb3a38a042e0c8f4c5309abab27e6f0d"
+    },
+    {
+      "file": "textures/terrain_coast.png",
+      "kind": "texture",
+      "width": 512,
+      "height": 512,
+      "bytes": 8534,
+      "sha256": "0ec7de3eed8286f74f4e610723ad180b6c4edd76c1f5ead6aae7b5929417072d"
+    },
+    {
+      "file": "textures/terrain_fair.png",
+      "kind": "texture",
+      "width": 512,
+      "height": 512,
+      "bytes": 8294,
+      "sha256": "7373496d0bf99a56a536d0e50c6936149c7575d8707cd3b1658efd902d7a33b8"
+    },
+    {
+      "file": "textures/terrain_hill.png",
+      "kind": "texture",
+      "width": 512,
+      "height": 512,
+      "bytes": 8064,
+      "sha256": "4986bebb6a4e7e203e16247ce0af80d4f34fe127fa53eeeb99cf958ee9a46a2d"
+    },
+    {
+      "file": "textures/terrain_plain.png",
+      "kind": "texture",
+      "width": 512,
+      "height": 512,
+      "bytes": 8184,
+      "sha256": "b38d127beab5df244a5c35c1457bbc32c6f4177eacc1f5e4ab25373e0876c2e6"
+    },
+    {
+      "file": "ui/128/icon_broom.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 11713,
+      "sha256": "005f1402ec3b36c4ec5f4cb5da7d1859204c9f60cf1ebb9ab8b0ccec35be0bc1"
+    },
+    {
+      "file": "ui/128/icon_castle.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 17834,
+      "sha256": "0404df7393b64bc3d1cb9d1c0d4f4f48f376f5eaa1748282dad6bc7821698d15"
+    },
+    {
+      "file": "ui/128/icon_coin.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 14698,
+      "sha256": "feaab94376a6f425d4267f949cbdee4e5385a9c01b1e5193cba02457c19ac2db"
+    },
+    {
+      "file": "ui/128/icon_correct.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 10798,
+      "sha256": "d29e18432970b7348643003a35df71787ef815990c9dc2d420e99253a4697516"
+    },
+    {
+      "file": "ui/128/icon_crown.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 15388,
+      "sha256": "69f24c34e76f26b0514bcf2648680b20c83b1d814d6542a17330d1f74b486f55"
+    },
+    {
+      "file": "ui/128/icon_foundation.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 10874,
+      "sha256": "4cb3a5868f6c293bcd58ec3e42ad994d6f28cc986da0dc47757ead465cf9462a"
+    },
+    {
+      "file": "ui/128/icon_house.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 16580,
+      "sha256": "cbfc9a81323fcbc253beebf17ccf3f2c6c03dc8c5f066ebfa2a83b57478a46c2"
+    },
+    {
+      "file": "ui/128/icon_lock.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 12654,
+      "sha256": "2c440e82f0cca28a897f22e03c35e47cf733ad6ed138fc735c255b213ac76833"
+    },
+    {
+      "file": "ui/128/icon_patrol.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 16861,
+      "sha256": "d044e10a9b5f77426ed8fbf0e6cf363c7359d2309232d9ad8ed98b0d138f8cfa"
+    },
+    {
+      "file": "ui/128/icon_pencil.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 11362,
+      "sha256": "376281a9bcf0779a37b69093b9c29d65a0a9ed3840740a5e6c026fb0cb099676"
+    },
+    {
+      "file": "ui/128/icon_settings.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 15394,
+      "sha256": "94200004c8770e352e9cf4d1c0be01ebab83ba5db333786c69e71b27c7f4e329"
+    },
+    {
+      "file": "ui/128/icon_speaker.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 14284,
+      "sha256": "ca8b0da2e14042a7e9332b35cfa9873473656edf26805bed6fccba02d4155e6a"
+    },
+    {
+      "file": "ui/128/icon_star.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 11916,
+      "sha256": "31c3ae2c773b7be0e427e6298ca851adcae5f88cdc253f905378b1cb6b231fb0"
+    },
+    {
+      "file": "ui/128/icon_star_empty.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 12160,
+      "sha256": "0a0bdbde5a7742a7534a433c4d46c469cdea33844920d6a59df388beb1bd5172"
+    },
+    {
+      "file": "ui/128/icon_wrong.png",
+      "kind": "ui",
+      "width": 128,
+      "height": 128,
+      "bytes": 15296,
+      "sha256": "65ddb7eb53eedb1b62205cd6d769daf61ac949ab6576fd9a0714c2062d8572fc"
+    },
+    {
+      "file": "ui/256/icon_broom.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 41584,
+      "sha256": "d807fae3be1b458da79b40bf7a75569cf760ce5a8c7815a1e1e8cbe7decb2cbf"
+    },
+    {
+      "file": "ui/256/icon_castle.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 63762,
+      "sha256": "05bc332d19d6f0db921e5b90215c7cb570b4253dceb62a953f0a1c5bbf12006b"
+    },
+    {
+      "file": "ui/256/icon_coin.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 53013,
+      "sha256": "44167ab95facd944ee1666b9c324caa9ae91da16b012456164b963f63efcf427"
+    },
+    {
+      "file": "ui/256/icon_correct.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 36330,
+      "sha256": "0d2c6c664e8852ec987afb4c5b9b5464c490b159ae50bd5e8903c8fb0cea3236"
+    },
+    {
+      "file": "ui/256/icon_crown.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 55927,
+      "sha256": "2b1e98cdff672059081aaad04a3508db017dfb9fdf626a7956451b25a3198093"
+    },
+    {
+      "file": "ui/256/icon_foundation.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 39557,
+      "sha256": "6f1a350434640e7dd854752f1519e35f8483f934ed0c1c95b14ae89d436384a7"
+    },
+    {
+      "file": "ui/256/icon_house.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 58665,
+      "sha256": "9fdbb8e659e3f3ab68c85f985b7a0f21e35bd6615e354a18e1f52b072f1288de"
+    },
+    {
+      "file": "ui/256/icon_lock.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 45141,
+      "sha256": "190b6abc443871b40aa7659163fe60550996a092b5c7802afceb2fbec24c475c"
+    },
+    {
+      "file": "ui/256/icon_patrol.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 60505,
+      "sha256": "0aafdf2d4a09604b8e80a9af6aa38977032226cc7f349c591e88fe515e73e7ca"
+    },
+    {
+      "file": "ui/256/icon_pencil.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 39223,
+      "sha256": "5f6b3e266342ac8aae8c2e8e2480840ae58c717945be459fb585e0dc0d168ccb"
+    },
+    {
+      "file": "ui/256/icon_settings.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 53908,
+      "sha256": "0eb4ffea3e9b91fd2b04dfe28a01f8581c0ce638e0fd6db4a3e614f75d8c4aed"
+    },
+    {
+      "file": "ui/256/icon_speaker.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 51178,
+      "sha256": "82ff7cf00b32a6e413b586b491399572fda4493c5bd06ed5f8a7a988f6563f84"
+    },
+    {
+      "file": "ui/256/icon_star.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 43168,
+      "sha256": "2fa51e05d6460852e58d37531d6b53b57dbeed2c0b2106e751f7a03e707f60b3"
+    },
+    {
+      "file": "ui/256/icon_star_empty.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 42690,
+      "sha256": "a776c99713bedd03487736847db410ac57a71a243bf8cd1c3ead8787c39491ae"
+    },
+    {
+      "file": "ui/256/icon_wrong.png",
+      "kind": "ui",
+      "width": 256,
+      "height": 256,
+      "bytes": 54948,
+      "sha256": "0bd093b0c84dd81ffc1c9f38736d3a251a9e52ffbf55f3b3544205d0d13fd175"
+    },
+    {
+      "file": "manifest.json",
+      "kind": "metadata",
+      "note": "Self record omits hash and byte size to avoid circular checksum."
+    }
+  ]
+}

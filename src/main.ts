@@ -2,13 +2,18 @@ import "./style.css";
 import raw from "./data/kingdom.json";
 import { Kingdom } from "./core/kingdom";
 import type { KingdomData } from "./core/types";
+import { loadAssets } from "./scene/assets";
+import { useAssets } from "./scene/buildings";
 import { KingdomScene } from "./scene/kingdom-scene";
 import { App } from "./ui/app";
 
 const data = raw as KingdomData;
 const k = new Kingdom(data);
-const scene = new KingdomScene(document.getElementById("scene")!, data, k);
+const assets = await loadAssets(import.meta.env.BASE_URL);
+useAssets(assets);
+const scene = new KingdomScene(document.getElementById("scene")!, data, k, assets);
 const app = new App(k, scene);
+document.getElementById("loading")?.remove();
 
 let last = performance.now();
 function frame(now: number) {

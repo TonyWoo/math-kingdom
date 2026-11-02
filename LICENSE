@@ -22,7 +22,8 @@ SOFTWARE.
 
 ---
 
-This license covers the code only. src/data/kingdom.json is derived from
+This license covers the code only. The art in public/art/, public/icons/ and
+art/ is CC0 1.0 (see art/math-kingdom-art-v1/LICENSE.txt). src/data/kingdom.json is derived from
 cn-math-taxonomy (https://github.com/xiaoyang111222/cn-math-taxonomy) and is
 licensed under CC BY-NC 4.0 (https://creativecommons.org/licenses/by-nc/4.0/).
 See README.md.

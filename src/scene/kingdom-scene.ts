@@ -6,13 +6,14 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
 import type { KingdomData } from "../core/types";
+import type { Assets } from "./assets";
 import { createBubble, createBuilding, createGoblin, createOpenMarker, createWeeds, geo, mat } from "./buildings";
 import { BASE_H, COLORS, SCALE, createWorld, terraceHeight } from "./world";
 
 const GRADE_NAME = ["一年级", "二年级", "三年级", "四年级", "五年级", "六年级"];
 
 const PAD_COLOR: Record<Status, number> = {
-	locked: 0x9aa0aa,
+	locked: 0xd3d8e0, // 浅灰，和上面的白雾融在一起
 	open: 0xf6e3a6,
 	built: 0x6db355,
 	due: 0x6db355,
@@ -73,7 +74,10 @@ export class KingdomScene {
 	private raycaster = new THREE.Raycaster();
 	private container: HTMLElement;
 
-	constructor(container: HTMLElement, data: KingdomData, k: Kingdom) {
+	private assets: Assets | null;
+
+	constructor(container: HTMLElement, data: KingdomData, k: Kingdom, assets: Assets | null) {
+		this.assets = assets;
 		this.container = container;
 		this.data = data;
 		this.k = k;
@@ -104,7 +108,7 @@ export class KingdomScene {
 		this.controls.maxPolarAngle = 1.2;
 		this.controls.zoomToCursor = true;
 
-		this.scene.add(createWorld(data));
+		this.scene.add(createWorld(data, assets));
 		this.addPaths();
 		this.pads = this.addPads();
 		this.fog = this.addFog();
@@ -166,11 +170,21 @@ export class KingdomScene {
 		});
 		this.scene.add(paths);
 
-		const plazas = new THREE.InstancedMesh(geo.cyl8, mat(0xe2c58a), this.data.villages.length);
+		// 村庄中心的小广场：有模型就用模型（路牌朝着王城），没有就用一块圆石板
+		const plazaModel = this.assets?.models.get("village_plaza")?.geometry;
+		const plazas = plazaModel
+			? new THREE.InstancedMesh(plazaModel, this.assets!.material, this.data.villages.length)
+			: new THREE.InstancedMesh(geo.cyl8, mat(0xe2c58a), this.data.villages.length);
 		this.data.villages.forEach((v, i) => {
-			dummy.position.set(v.x * S, terraceHeight(v.grade) + 0.02, v.y * S);
-			dummy.rotation.set(0, 0, 0);
-			dummy.scale.set(0.42, 0.04, 0.42);
+			if (plazaModel) {
+				dummy.position.set(v.x * S, terraceHeight(v.grade) + 0.004, v.y * S);
+				dummy.rotation.set(0, Math.atan2(-v.x, -v.y), 0);
+				dummy.scale.set(1, 1, 1);
+			} else {
+				dummy.position.set(v.x * S, terraceHeight(v.grade) + 0.02, v.y * S);
+				dummy.rotation.set(0, 0, 0);
+				dummy.scale.set(0.42, 0.04, 0.42);
+			}
 			dummy.updateMatrix();
 			plazas.setMatrixAt(i, dummy.matrix);
 		});
@@ -209,12 +223,14 @@ export class KingdomScene {
 		// 平滑着色加一点自发光，看起来是软软的云团而不是石头
 		const material = new THREE.MeshLambertMaterial({
 			color: 0xffffff,
-			emissive: 0x9aa6ba,
+			emissive: 0xaab4c6,
 			transparent: true,
 			opacity: 0.9,
 			depthWrite: false,
 		});
-		const fog = new THREE.InstancedMesh(geo.puff, material, this.k.order.length * 3);
+		// 有云朵模型就用它（本身就是扁的），否则用圆球压扁
+		const cloud = this.assets?.models.get("cloud")?.geometry;
+		const fog = new THREE.InstancedMesh(cloud ?? geo.puff, material, this.k.order.length * 3);
 		const dummy = new THREE.Object3D();
 		this.k.order.forEach((id, index) => {
 			const pos = this.plotPosition(id);
@@ -222,7 +238,8 @@ export class KingdomScene {
 				const a = index * 2.4 + j * 2.1;
 				dummy.position.set(pos.x + Math.cos(a) * 0.24, pos.y + 0.16 + j * 0.05, pos.z + Math.sin(a) * 0.24);
 				const s = 0.55 + ((index + j * 3) % 4) * 0.08;
-				dummy.scale.set(s, s * 0.55, s);
+				if (cloud) dummy.scale.set(s * 1.25, s * 1.25, s * 1.25);
+				else dummy.scale.set(s, s * 0.55, s);
 				dummy.rotation.set(0, a, 0);
 				dummy.updateMatrix();
 				this.fogBase.push(dummy.matrix.clone());
@@ -272,7 +289,7 @@ export class KingdomScene {
 		el.className = "label castle";
 		el.textContent = "王城";
 		const castle = new CSS2DObject(el);
-		castle.position.set(0, 3.6, 0);
+		castle.position.set(0, this.assets ? 4.2 : 3.6, 0);
 		this.scene.add(castle);
 	}
 
@@ -319,8 +336,11 @@ export class KingdomScene {
 			view.group.add(goblin);
 		}
 		if (st === "due" || st === "goblin") {
+			// 气泡浮在建筑顶上（瞭望塔比别的高）
+			const top = new THREE.Box3().setFromObject(b).max.y;
 			const bubble = createBubble(st === "due" ? "?" : "!");
-			bubble.position.set(0.2, 1.05, 0);
+			bubble.userData.baseY = top + 0.28;
+			bubble.position.set(0.2, bubble.userData.baseY, 0);
 			view.group.add(bubble);
 		}
 	}
@@ -409,7 +429,9 @@ export class KingdomScene {
 		g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
 		const points = new THREE.Points(
 			g,
-			new THREE.PointsMaterial({ color: 0xffd040, size: 0.09, transparent: true, depthWrite: false }),
+			this.assets
+				? new THREE.PointsMaterial({ map: this.assets.star, size: 0.16, transparent: true, depthWrite: false, alphaTest: 0.05 })
+				: new THREE.PointsMaterial({ color: 0xffd040, size: 0.09, transparent: true, depthWrite: false }),
 		);
 		this.scene.add(points);
 		this.bursts.push({ points, velocity, age: 0 });
@@ -534,7 +556,7 @@ export class KingdomScene {
 					const s = 1 + 0.12 * Math.sin(this.clock * 4);
 					o.scale.set(s, s, s);
 				}
-				if (o.userData.bob) o.position.y = (o instanceof THREE.Sprite ? 1.05 : 0) + Math.abs(Math.sin(this.clock * 3 + v.index)) * 0.06;
+				if (o.userData.bob) o.position.y = (o.userData.baseY ?? 0) + Math.abs(Math.sin(this.clock * 3 + v.index)) * 0.06;
 				if (o.userData.wave) o.rotation.y = Math.sin(this.clock * 4 + v.index) * 0.3;
 			});
 		}

@@ -1,0 +1,372 @@
+[
+  {
+    "file": "models/mill_1.glb",
+    "triangles": 136,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/mill_2.glb",
+    "triangles": 242,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/mill_3.glb",
+    "triangles": 367,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/library_1.glb",
+    "triangles": 132,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/library_2.glb",
+    "triangles": 208,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/library_3.glb",
+    "triangles": 333,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/watchtower_1.glb",
+    "triangles": 140,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/watchtower_2.glb",
+    "triangles": 178,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/watchtower_3.glb",
+    "triangles": 303,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/market_1.glb",
+    "triangles": 132,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/market_2.glb",
+    "triangles": 384,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/market_3.glb",
+    "triangles": 509,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/plaza_1.glb",
+    "triangles": 120,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/plaza_2.glb",
+    "triangles": 226,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/plaza_3.glb",
+    "triangles": 351,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/castle.glb",
+    "triangles": 742,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/tree_pine.glb",
+    "triangles": 50,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/tree_round.glb",
+    "triangles": 116,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/tree_blossom.glb",
+    "triangles": 116,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/rock_1.glb",
+    "triangles": 32,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/rock_2.glb",
+    "triangles": 32,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/bush.glb",
+    "triangles": 96,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/village_plaza.glb",
+    "triangles": 68,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/signpost.glb",
+    "triangles": 24,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/weeds.glb",
+    "triangles": 14,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/goblin.glb",
+    "triangles": 184,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/cloud.glb",
+    "triangles": 180,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/enemy_knight.glb",
+    "triangles": 244,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/enemy_wolf.glb",
+    "triangles": 220,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/enemy_catapult.glb",
+    "triangles": 336,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/defense_tower.glb",
+    "triangles": 82,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/deco_fountain.glb",
+    "triangles": 160,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/deco_statue.glb",
+    "triangles": 76,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/deco_flowerbed.glb",
+    "triangles": 184,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/deco_bench.glb",
+    "triangles": 72,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/deco_lamp.glb",
+    "triangles": 66,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  },
+  {
+    "file": "models/deco_well.glb",
+    "triangles": 104,
+    "budgetPassed": true,
+    "dimensionsPassed": true,
+    "originPassed": true,
+    "sharedPalettePassed": true,
+    "meshTransformsBaked": true,
+    "animatedNodesPresent": true
+  }
+]

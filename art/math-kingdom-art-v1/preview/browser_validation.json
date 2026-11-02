@@ -1,0 +1,319 @@
+{
+  "models": 37,
+  "webgl": true,
+  "results": [
+    {
+      "file": "models/mill_1.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/mill_2.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "blades",
+          "axis": "z"
+        }
+      ]
+    },
+    {
+      "file": "models/mill_3.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 3,
+      "animatedNodes": [
+        {
+          "name": "blades",
+          "axis": "z"
+        },
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/library_1.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/library_2.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/library_3.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/watchtower_1.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/watchtower_2.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/watchtower_3.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/market_1.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/market_2.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/market_3.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/plaza_1.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/plaza_2.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "flag",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/plaza_3.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 3,
+      "animatedNodes": [
+        {
+          "name": "flag",
+          "axis": "y"
+        },
+        {
+          "name": "pennant",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/castle.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "flag",
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "file": "models/tree_pine.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/tree_round.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/tree_blossom.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/rock_1.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/rock_2.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/bush.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/village_plaza.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/signpost.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/weeds.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/goblin.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/cloud.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/enemy_knight.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/enemy_wolf.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/enemy_catapult.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 2,
+      "animatedNodes": [
+        {
+          "name": "arm",
+          "axis": "x"
+        }
+      ]
+    },
+    {
+      "file": "models/defense_tower.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/deco_fountain.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/deco_statue.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/deco_flowerbed.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/deco_bench.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/deco_lamp.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    },
+    {
+      "file": "models/deco_well.glb",
+      "loaded": true,
+      "paletteDecoded": true,
+      "meshes": 1,
+      "animatedNodes": []
+    }
+  ],
+  "pageErrors": []
+}

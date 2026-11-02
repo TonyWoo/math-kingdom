@@ -4,6 +4,7 @@
 
 import * as THREE from "three";
 import type { KingdomData, Terrain } from "../core/types";
+import type { Assets, ModelName } from "./assets";
 
 export const SCALE = 0.01;
 export const BASE_H = 0.3; // 岛面（道路）的高度
@@ -57,7 +58,7 @@ function slab(shape: THREE.Shape, bottom: number, top: number, color: number): T
 	return mesh;
 }
 
-export function createWorld(data: KingdomData): THREE.Group {
+export function createWorld(data: KingdomData, assets: Assets | null = null): THREE.Group {
 	const group = new THREE.Group();
 	const outer = data.rings.at(-1)!.r2 * SCALE;
 
@@ -97,6 +98,11 @@ export function createWorld(data: KingdomData): THREE.Group {
 	}
 
 	// 岛的外缘：一圈森林
+	if (assets) {
+		group.add(createForest(assets, outer));
+		group.add(createCastleModel(assets));
+		return group;
+	}
 	const trunk = new THREE.MeshLambertMaterial({ color: 0x7a5233, flatShading: true });
 	const leaf = new THREE.MeshLambertMaterial({ color: 0x3f8a3a, flatShading: true });
 	const trunkGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.3, 5);
@@ -120,6 +126,48 @@ export function createWorld(data: KingdomData): THREE.Group {
 
 	group.add(createCastle());
 	return group;
+}
+
+// 用模型种森林：三种树轮流，偶尔夹着灌木和石头，每种一个 InstancedMesh
+function createForest(assets: Assets, outer: number): THREE.Group {
+	const g = new THREE.Group();
+	const kinds: ModelName[] = ["tree_pine", "tree_round", "tree_pine", "tree_blossom", "tree_pine", "bush", "tree_round", "rock_1"];
+	const count = Math.floor(outer * 7);
+	const spots = new Map<ModelName, THREE.Matrix4[]>();
+	const q = new THREE.Quaternion();
+	const up = new THREE.Vector3(0, 1, 0);
+	for (let i = 0; i < count; i++) {
+		const kind = kinds[(i * 5 + (i >> 2)) % kinds.length];
+		const a = (i / count) * Math.PI * 2 + Math.sin(i * 12.9898) * 0.02;
+		const r = outer + 0.45 + ((i * 7) % 5) * 0.13;
+		const sc = 0.9 + ((i * 13) % 7) * 0.08;
+		q.setFromAxisAngle(up, i * 2.3);
+		const m = new THREE.Matrix4().compose(new THREE.Vector3(r * Math.cos(a), BASE_H, r * Math.sin(a)), q, new THREE.Vector3(sc, sc, sc));
+		if (!spots.has(kind)) spots.set(kind, []);
+		spots.get(kind)!.push(m);
+	}
+	for (const [kind, list] of spots) {
+		const geometry = assets.models.get(kind)!.geometry!;
+		const mesh = new THREE.InstancedMesh(geometry, assets.material, list.length);
+		list.forEach((m, i) => mesh.setMatrixAt(i, m));
+		g.add(mesh);
+	}
+	return g;
+}
+
+// 王城模型，正门朝 +Z（朝着默认镜头）
+function createCastleModel(assets: Assets): THREE.Group {
+	const g = new THREE.Group();
+	const castle = assets.models.get("castle")!;
+	if (castle.geometry) g.add(new THREE.Mesh(castle.geometry, assets.material));
+	for (const p of castle.parts) {
+		const mesh = new THREE.Mesh(p.geometry, assets.material);
+		mesh.position.copy(p.pivot);
+		g.add(mesh);
+	}
+	g.position.y = BASE_H - 0.02;
+	g.scale.setScalar(1.1);
+	return g;
 }
 
 // 王城：圆形石台上的城堡，蓝色尖顶。

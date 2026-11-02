@@ -42,9 +42,14 @@ npm run import -- ../cn-math-taxonomy     # 重新生成 src/data/kingdom.json�
 npm test
 ```
 
+## 美术
+
+3D 模型、贴图、精灵、图标和 App 图标都在 `public/art/` 和 `public/icons/`，按 [docs/art-prompt.md](docs/art-prompt.md) 的规格由 AI 生成。原始交付包里的说明、自检记录、预览总表和 256 像素图标存档在 [art/math-kingdom-art-v1/](art/math-kingdom-art-v1/)。美术资源加载失败时，游戏会自动退回用代码拼出来的建筑。
+
 ## 许可证
 
 - 代码：MIT，见 [LICENSE](LICENSE)。
+- 美术资源（`public/art/`、`public/icons/`、`art/`）：CC0 1.0，见 [art/math-kingdom-art-v1/LICENSE.txt](art/math-kingdom-art-v1/LICENSE.txt)。
 - `src/data/kingdom.json`：来自 cn-math-taxonomy，按 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans) 许可（署名、非商业使用）。**包含这份数据的网站不能用于商业用途**；要商用请联系原作者另外授权。
 
 设计说明见 [docs/design.md](docs/design.md)。
@@ -64,6 +69,7 @@ the browser.
 npm install && npm run dev
 ```
 
-Code is MIT. The knowledge graph and questions in `src/data/kingdom.json` come from
+Code is MIT. The 3D models, textures and icons in `public/art/` and `public/icons/` are CC0 (AI-generated to the spec
+in `docs/art-prompt.md`; the game falls back to procedural buildings if they fail to load). The knowledge graph and questions in `src/data/kingdom.json` come from
 [cn-math-taxonomy](https://github.com/xiaoyang111222/cn-math-taxonomy) under **CC BY-NC 4.0** (non-commercial); its
 author notes they are AI-generated and not yet reviewed by teachers.

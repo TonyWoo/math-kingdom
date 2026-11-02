@@ -1,3 +1,4 @@
+// 建筑和地块装饰。有美术资源（assets.ts，public/art/）时用模型；没有时（加载失败）退回下面用基本几何体拼的版本。
 // 低多边形建筑：全部用基本几何体拼，不依赖美术资源。几何体和材质共享，减少显存和切换。
 // 星级：1 星是地基加脚手架，2 星是建好的房子，3 星换金色屋顶并插旗。
 // 地块状态的装饰：空地的告示牌和光圈、该复习的问号、长草、哥布林。
@@ -5,6 +6,14 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import type { Building } from "../core/types";
+import { type Assets, type ModelName, instantiate } from "./assets";
+
+let assets: Assets | null = null;
+
+// main.ts 加载完资源后调用；不调用就一直用程序化建筑
+export function useAssets(a: Assets | null): void {
+	assets = a;
+}
 
 const geo = {
 	box: new THREE.BoxGeometry(1, 1, 1),
@@ -222,6 +231,7 @@ export function bake(g: THREE.Group): THREE.Group {
 
 // 按星级建一栋建筑；0 星返回空。
 export function createBuilding(type: Building, stars: number): THREE.Group {
+	if (assets && stars > 0) return instantiate(assets, `${type}_${Math.min(3, stars)}` as ModelName);
 	const g = new THREE.Group();
 	if (stars <= 0) return g;
 	if (stars === 1) {
@@ -236,8 +246,12 @@ export function createBuilding(type: Building, stars: number): THREE.Group {
 // 空地：木告示牌和一圈会呼吸的金色光环
 export function createOpenMarker(): THREE.Group {
 	const g = new THREE.Group();
-	part(g, "box", C.darkWood, [0.04, 0.3, 0.04], [0, 0, 0]);
-	part(g, "box", C.wood, [0.26, 0.14, 0.03], [0, 0.22, 0]);
+	if (assets) {
+		g.add(instantiate(assets, "signpost"));
+	} else {
+		part(g, "box", C.darkWood, [0.04, 0.3, 0.04], [0, 0, 0]);
+		part(g, "box", C.wood, [0.26, 0.14, 0.03], [0, 0.22, 0]);
+	}
 	const ring = new THREE.Mesh(
 		new THREE.TorusGeometry(0.3, 0.025, 6, 32),
 		new THREE.MeshBasicMaterial({ color: 0xffc83a }),
@@ -252,6 +266,21 @@ export function createOpenMarker(): THREE.Group {
 // 长草：周围几簇深绿色小锥
 export function createWeeds(): THREE.Group {
 	const g = new THREE.Group();
+	if (assets) {
+		const spots = [
+			[-0.3, 0.16, 0.2],
+			[0.3, 0.2, 1.9],
+			[-0.2, -0.3, 3.1],
+			[0.28, -0.22, 4.4],
+		];
+		for (const [x, z, r] of spots) {
+			const w = instantiate(assets, "weeds");
+			w.position.set(x, 0, z);
+			w.rotation.y = r;
+			g.add(w);
+		}
+		return g;
+	}
 	const spots = [
 		[-0.3, 0.15],
 		[0.3, 0.2],
@@ -270,6 +299,12 @@ export function createWeeds(): THREE.Group {
 
 // 哥布林：绿色小人，尖耳朵，会上下晃
 export function createGoblin(): THREE.Group {
+	if (assets) {
+		const goblin = instantiate(assets, "goblin");
+		goblin.rotation.y = -0.6; // 朝着镜头方向斜站
+		goblin.userData.bob = true;
+		return goblin;
+	}
 	const g = new THREE.Group();
 	part(g, "cyl8", 0x6b4a2b, [0.13, 0.12, 0.1], [0, 0, 0]);
 	part(g, "sphere", C.goblin, [0.14, 0.14, 0.14], [0, 0.12, 0]);
@@ -286,7 +321,7 @@ export function createGoblin(): THREE.Group {
 // 头顶的提示气泡（? 或 !），用画布贴图的精灵，永远朝向镜头
 const bubbleTextures = new Map<string, THREE.Texture>();
 export function createBubble(symbol: "?" | "!"): THREE.Sprite {
-	let tex = bubbleTextures.get(symbol);
+	let tex = assets ? (symbol === "?" ? assets.bubbleReview : assets.bubbleAlert) : bubbleTextures.get(symbol);
 	if (!tex) {
 		const c = document.createElement("canvas");
 		c.width = c.height = 128;
@@ -313,7 +348,7 @@ export function createBubble(symbol: "?" | "!"): THREE.Sprite {
 		bubbleTextures.set(symbol, tex);
 	}
 	const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
-	s.scale.set(0.32, 0.32, 1);
+	s.scale.set(0.27, 0.27, 1);
 	s.renderOrder = 10;
 	s.userData.bob = true;
 	return s;

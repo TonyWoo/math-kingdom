@@ -1,0 +1,455 @@
+{
+  "width": 256,
+  "height": 256,
+  "origin": "pixel top-left; glTF UV top-left with texture.flipY=false",
+  "swatches": [
+    {
+      "name": "grass",
+      "hex": "#8FD65F",
+      "pixelRect": [
+        0,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.0625,
+        0.125
+      ]
+    },
+    {
+      "name": "grass_shade",
+      "hex": "#679A44",
+      "pixelRect": [
+        32,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.1875,
+        0.125
+      ]
+    },
+    {
+      "name": "sand",
+      "hex": "#E8C983",
+      "pixelRect": [
+        64,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.3125,
+        0.125
+      ]
+    },
+    {
+      "name": "sand_shade",
+      "hex": "#A7915E",
+      "pixelRect": [
+        96,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.4375,
+        0.125
+      ]
+    },
+    {
+      "name": "wood",
+      "hex": "#A8733F",
+      "pixelRect": [
+        128,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.5625,
+        0.125
+      ]
+    },
+    {
+      "name": "wood_shade",
+      "hex": "#79532D",
+      "pixelRect": [
+        160,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.6875,
+        0.125
+      ]
+    },
+    {
+      "name": "darkwood",
+      "hex": "#7A5233",
+      "pixelRect": [
+        192,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.8125,
+        0.125
+      ]
+    },
+    {
+      "name": "darkwood_shade",
+      "hex": "#583B25",
+      "pixelRect": [
+        224,
+        0,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.9375,
+        0.125
+      ]
+    },
+    {
+      "name": "stone",
+      "hex": "#B9B3A6",
+      "pixelRect": [
+        0,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.0625,
+        0.375
+      ]
+    },
+    {
+      "name": "stone_shade",
+      "hex": "#858178",
+      "pixelRect": [
+        32,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.1875,
+        0.375
+      ]
+    },
+    {
+      "name": "ivory",
+      "hex": "#F3EAD8",
+      "pixelRect": [
+        64,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.3125,
+        0.375
+      ]
+    },
+    {
+      "name": "ivory_shade",
+      "hex": "#AFA89C",
+      "pixelRect": [
+        96,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.4375,
+        0.375
+      ]
+    },
+    {
+      "name": "red",
+      "hex": "#D9534A",
+      "pixelRect": [
+        128,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.5625,
+        0.375
+      ]
+    },
+    {
+      "name": "red_shade",
+      "hex": "#9C3C35",
+      "pixelRect": [
+        160,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.6875,
+        0.375
+      ]
+    },
+    {
+      "name": "blue",
+      "hex": "#4A7FD8",
+      "pixelRect": [
+        192,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.8125,
+        0.375
+      ]
+    },
+    {
+      "name": "blue_shade",
+      "hex": "#355B9C",
+      "pixelRect": [
+        224,
+        64,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.9375,
+        0.375
+      ]
+    },
+    {
+      "name": "gold",
+      "hex": "#F2C230",
+      "pixelRect": [
+        0,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.0625,
+        0.625
+      ]
+    },
+    {
+      "name": "gold_shade",
+      "hex": "#AE8C23",
+      "pixelRect": [
+        32,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.1875,
+        0.625
+      ]
+    },
+    {
+      "name": "water",
+      "hex": "#5CC4F0",
+      "pixelRect": [
+        64,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.3125,
+        0.625
+      ]
+    },
+    {
+      "name": "water_shade",
+      "hex": "#428DAD",
+      "pixelRect": [
+        96,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.4375,
+        0.625
+      ]
+    },
+    {
+      "name": "goblin",
+      "hex": "#6CC24A",
+      "pixelRect": [
+        128,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.5625,
+        0.625
+      ]
+    },
+    {
+      "name": "goblin_shade",
+      "hex": "#4E8C35",
+      "pixelRect": [
+        160,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.6875,
+        0.625
+      ]
+    },
+    {
+      "name": "deepgreen",
+      "hex": "#427B46",
+      "pixelRect": [
+        192,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.8125,
+        0.625
+      ]
+    },
+    {
+      "name": "deepgreen_shade",
+      "hex": "#305932",
+      "pixelRect": [
+        224,
+        128,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.9375,
+        0.625
+      ]
+    },
+    {
+      "name": "pink",
+      "hex": "#F3A5BA",
+      "pixelRect": [
+        0,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.0625,
+        0.875
+      ]
+    },
+    {
+      "name": "pink_shade",
+      "hex": "#AF7786",
+      "pixelRect": [
+        32,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.1875,
+        0.875
+      ]
+    },
+    {
+      "name": "white",
+      "hex": "#FFFFFF",
+      "pixelRect": [
+        64,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.3125,
+        0.875
+      ]
+    },
+    {
+      "name": "white_shade",
+      "hex": "#B8B8B8",
+      "pixelRect": [
+        96,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.4375,
+        0.875
+      ]
+    },
+    {
+      "name": "dark",
+      "hex": "#424452",
+      "pixelRect": [
+        128,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.5625,
+        0.875
+      ]
+    },
+    {
+      "name": "dark_shade",
+      "hex": "#30313B",
+      "pixelRect": [
+        160,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.6875,
+        0.875
+      ]
+    },
+    {
+      "name": "yellow",
+      "hex": "#FFE77A",
+      "pixelRect": [
+        192,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.8125,
+        0.875
+      ]
+    },
+    {
+      "name": "yellow_shade",
+      "hex": "#B8A658",
+      "pixelRect": [
+        224,
+        192,
+        32,
+        64
+      ],
+      "uvCenter": [
+        0.9375,
+        0.875
+      ]
+    }
+  ]
+}
