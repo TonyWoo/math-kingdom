@@ -58,6 +58,7 @@ export class App {
 	private demo: boolean;
 	private selected: string | null = null;
 	private quiz: QuizState | null = null;
+	private gradeFilter: number | null = null; // 地图只显示这个年级，null = 全部
 	private dayOffset: number;
 	private spot: Spot | null = null; // “我在这里”：地图上的小人、第一人称的出发点
 	private toastTimer = 0;
@@ -119,6 +120,7 @@ export class App {
 		};
 		view.refresh(this.progress, this.now());
 		this.markVillages();
+		view.setGradeFilter?.(this.gradeFilter);
 	}
 
 	// 地块靠王城一侧，面朝它（和地图视角点地块时一样）
@@ -385,12 +387,18 @@ export class App {
 
 	private setupChrome(): void {
 		const grades = $("grades");
-		// 年级按钮按数据里实际有的年级圈建：英语从三年级起，就只有三到六年级的按钮
+		const all = document.createElement("button");
+		all.className = "btn";
+		all.textContent = "全部";
+		all.onclick = () => this.setGradeFilter(null);
+		grades.appendChild(all);
+		// 年级按钮按数据里实际有的年级圈建：英语从三年级起，就只有三到六年级的按钮。
+		// 点年级 = 地图只显示这一年级（再点一次或点「全部」恢复）
 		for (const ring of this.k.data.rings) {
 			const b = document.createElement("button");
 			b.className = "btn";
 			b.textContent = GRADE_NAME[ring.grade - 1] ?? `${ring.grade}年级`;
-			b.onclick = () => this.scene.focusGrade(ring.grade);
+			b.onclick = () => this.setGradeFilter(this.gradeFilter === ring.grade ? null : ring.grade);
 			grades.appendChild(b);
 		}
 		$("home").onclick = () => this.scene.goHome();
@@ -472,15 +480,30 @@ export class App {
 		$("patrol").innerHTML = `${icon("patrol")}<span class="lbl">今日巡视</span>${care ? `<span class="badge">${care}</span>` : ""}`;
 	}
 
-	// 当前镜头对着哪个年级（每帧调用）
+	// 地图按年级筛选：只显示这一年级的内容，镜头也飞过去；null 恢复全部
+	private setGradeFilter(grade: number | null): void {
+		if (this.quiz && !this.quiz.outcome) {
+			this.toast("先把这次答题做完吧");
+			return;
+		}
+		this.gradeFilter = grade;
+		this.close();
+		this.scene.setGradeFilter?.(grade); // 地图视角里它自己会把镜头拉到这一圈的全景
+		if (grade === null) this.scene.goHome();
+		else if (!this.scene.setGradeFilter) this.scene.focusGrade(grade);
+	}
+
+	// 当前镜头对着哪个年级（每帧调用）；筛选状态下高亮的是被筛的年级和「全部」
 	tick(dt = 0): void {
 		this.stepBattle(dt);
+		const buttons = $("grades").children;
+		buttons[0].classList.toggle("active", this.gradeFilter === null);
 		const r = this.scene.radius();
 		const rings = this.k.data.rings;
-		const buttons = $("grades").children;
 		for (let i = 0; i < rings.length; i++) {
 			const ring = rings[i];
-			buttons[i].classList.toggle("active", r >= ring.r1 - 70 && r <= ring.r2);
+			const on = this.gradeFilter !== null ? this.gradeFilter === ring.grade : r >= ring.r1 - 70 && r <= ring.r2;
+			buttons[i + 1].classList.toggle("active", on);
 		}
 	}
 
@@ -489,6 +512,8 @@ export class App {
 			this.toast("先把这次答题做完吧");
 			return;
 		}
+		// 筛选时从巡视/先修链接跳到别的年级的地块，先恢复全部显示，不然跳过去是块空地
+		if (this.gradeFilter !== null && this.k.topic(id).grade !== this.gradeFilter) this.setGradeFilter(null);
 		this.quiz = null;
 		this.stopBattle();
 		this.village = null;

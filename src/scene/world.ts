@@ -93,7 +93,9 @@ export function createWorld(data: KingdomData, assets: Assets | null = null): TH
 		for (const s of data.sectors) {
 			const pad = AVENUE / ((ring.r1 + ring.r2) / 2);
 			const color = TERRAIN_COLOR[s.terrain][ring.grade % 2];
-			group.add(slab(annularSector(r1, r2, s.a1 + pad, s.a2 - pad), BASE_H, h, color));
+			const mesh = slab(annularSector(r1, r2, s.a1 + pad, s.a2 - pad), BASE_H, h, color);
+			mesh.userData.grade = ring.grade; // 按年级筛选时靠它显隐台地
+			group.add(mesh);
 		}
 	}
 

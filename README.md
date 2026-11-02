@@ -13,6 +13,7 @@
 - **适合小朋友**：大号数字键盘，题目可以朗读，平板和手机都能用。
 - **有音乐**：平时是轻快的背景音乐，打保卫战时换成战鼓，建成或守住村庄时有庆祝音乐；都是 CC0 作品（见 `public/audio/CREDITS.md`），第一次点按后开始播放，顶栏的喇叭按钮或设置里可以关。
 - **手机上更省地方**：窄屏时顶栏只显示图标，不显示文字。
+- **按年级看地图**：点年级按钮，地图只显示这一年级的台地、地块和村庄，镜头拉到能看见整圈，地图等于缩到这一年级；再点一次或点「全部」恢复。巡视、先修链接跳到别的年级的地块时会自动恢复全部显示。
 
 ## 两种视角
 
@@ -89,6 +90,8 @@ defended village becomes a walled town with a reward decoration, visible on the 
 the browser. Music is included — a cheerful background loop, war drums during a defense and a fanfare when a plot is
 built or a village defended, all CC0 (see `public/audio/CREDITS.md`), starting after the first tap and switchable from
 the speaker button in the top bar or in Settings. On narrow screens the top bar shows icons only, without text labels.
+The grade buttons filter the map to a single grade — only that ring's terraces, plots and villages stay visible and the
+camera pulls back to show the whole ring; tap the grade again or the "全部" (All) button to restore the full map.
 
 ```bash
 npm install && npm run dev

@@ -38,6 +38,8 @@ export interface View {
 	// 把镜头（或玩家）带到某块地、某个年级、王城；immediate 时不播放过渡
 	focusPlot(id: string, immediate?: boolean): void;
 	focusGrade(grade: number, immediate?: boolean): void;
+	// 只显示一个年级的内容（地图缩小到这一圈），null 显示全部；第一人称没有这个概念，可以不实现
+	setGradeFilter?(grade: number | null): void;
 	goHome(): void;
 	// 面板挡住的像素（右侧或底部），画面中心相应挪开
 	setInset(right: number, bottom: number): void;

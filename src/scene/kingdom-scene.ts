@@ -71,6 +71,15 @@ export class KingdomScene implements View {
 	private pads: THREE.InstancedMesh;
 	private fog: THREE.InstancedMesh;
 	private fogBase: THREE.Matrix4[] = [];
+	// 按年级筛选（null = 全部显示）：实例网格靠把不显示的那份矩阵缩成 0 来隐藏，所以要留底稿矩阵
+	private gradeFilter: number | null = null;
+	private padBase: THREE.Matrix4[] = [];
+	private pathsMesh!: THREE.InstancedMesh;
+	private pathsBase: THREE.Matrix4[] = [];
+	private pathGrades: number[] = []; // 每段路属于哪个村庄的年级，和 paths 的实例一一对应
+	private plazasMesh!: THREE.InstancedMesh;
+	private plazasBase: THREE.Matrix4[] = [];
+	private lastMarks: VillageMark[] = [];
 	private villageLabels: CSS2DObject[] = [];
 	private gradeLabels: CSS2DObject[] = [];
 	private selection = new THREE.Group();
@@ -164,10 +173,12 @@ export class KingdomScene implements View {
 			const a = Math.atan2(v.y, v.x);
 			const rr = ring.r1 * S - 0.3;
 			segs.push([new THREE.Vector3(rr * Math.cos(a), BASE_H + 0.01, rr * Math.sin(a)), center, 0.16]);
+			this.pathGrades.push(v.grade);
 			for (const id of v.plots) {
 				const p = this.plotPosition(id);
 				p.y = h;
 				segs.push([center, p, 0.08]);
+				this.pathGrades.push(v.grade);
 			}
 		}
 		const paths = new THREE.InstancedMesh(geo.box, mat(0xeed59a), segs.length);
@@ -177,7 +188,9 @@ export class KingdomScene implements View {
 			dummy.scale.set(w, 0.02, a.distanceTo(b));
 			dummy.updateMatrix();
 			paths.setMatrixAt(i, dummy.matrix);
+			this.pathsBase.push(dummy.matrix.clone());
 		});
+		this.pathsMesh = paths;
 		this.scene.add(paths);
 
 		// 村庄中心的小广场：有模型就用模型（路牌朝着王城），没有就用一块圆石板
@@ -197,7 +210,9 @@ export class KingdomScene implements View {
 			}
 			dummy.updateMatrix();
 			plazas.setMatrixAt(i, dummy.matrix);
+			this.plazasBase.push(dummy.matrix.clone());
 		});
+		this.plazasMesh = plazas;
 		this.scene.add(plazas);
 	}
 
@@ -210,6 +225,7 @@ export class KingdomScene implements View {
 			dummy.scale.set(0.72, 0.06, 0.72);
 			dummy.updateMatrix();
 			pads.setMatrixAt(index, dummy.matrix);
+			this.padBase.push(dummy.matrix.clone());
 			pads.setColorAt(index, new THREE.Color(PAD_COLOR.locked));
 			const group = new THREE.Group();
 			group.position.set(pos.x, pos.y + 0.06, pos.z);
@@ -313,8 +329,9 @@ export class KingdomScene implements View {
 				this.rebuild(view);
 				if (grew || view.id === changed) view.grow = 0;
 				this.pads.setColorAt(view.index, color.setHex(PAD_COLOR[st]));
+				const filteredOut = this.gradeFilter !== null && this.k.topic(view.id).grade !== this.gradeFilter;
 				for (let j = 0; j < 3; j++) {
-					this.fog.setMatrixAt(view.index * 3 + j, st === "locked" ? this.fogBase[view.index * 3 + j] : zero);
+					this.fog.setMatrixAt(view.index * 3 + j, st === "locked" && !filteredOut ? this.fogBase[view.index * 3 + j] : zero);
 				}
 				view.label.element.classList.toggle("locked", st === "locked");
 			}
@@ -470,7 +487,7 @@ export class KingdomScene implements View {
 		const rect = this.renderer.domElement.getBoundingClientRect();
 		const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
 		this.raycaster.setFromCamera(ndc, this.camera);
-		const groups = [...this.plots.values()].map((v) => v.group);
+		const groups = [...this.plots.values()].filter((v) => v.group.visible).map((v) => v.group);
 		const hits = this.raycaster.intersectObjects([this.pads, ...groups], true);
 		for (const h of hits) {
 			if (h.object === this.pads && h.instanceId !== undefined) return this.k.order[h.instanceId];
@@ -484,6 +501,7 @@ export class KingdomScene implements View {
 		let best: string | null = null;
 		let bestD = 0.5;
 		for (const v of this.plots.values()) {
+			if (!v.group.visible) continue; // 被筛选隐藏的地块点不到
 			const t = (v.pos.y - ground.y) / dir.y;
 			if (t <= 0) continue;
 			const x = ground.x + dir.x * t;
@@ -527,6 +545,7 @@ export class KingdomScene implements View {
 
 	// 可以保卫的村庄插红旗；守住的变成城镇：金旗、沿村庄扇形边界的一圈矮墙（内侧中间留门）、广场旁的奖励装饰
 	villages(marks: VillageMark[]): void {
+		this.lastMarks = marks;
 		if (!this.towns.parent) this.scene.add(this.towns);
 		this.towns.traverse((o) => {
 			if (o instanceof THREE.Mesh && o.userData.own) o.geometry.dispose();
@@ -537,6 +556,7 @@ export class KingdomScene implements View {
 		marks.forEach((m, i) => {
 			if (m === "none") return;
 			const v = this.data.villages[i];
+			if (this.gradeFilter !== null && v.grade !== this.gradeFilter) return; // 筛选时别的年级的村庄不画旗和城墙
 			const h = terraceHeight(v.grade);
 			const cx = v.x * SCALE;
 			const cz = v.y * SCALE;
@@ -630,7 +650,7 @@ export class KingdomScene implements View {
 	private groundAt(x: number, z: number): number {
 		this.raycaster.set(new THREE.Vector3(x, 20, z), new THREE.Vector3(0, -1, 0));
 		// 跳过森林（InstancedMesh）和王城，只要地面
-		const hit = this.raycaster.intersectObject(this.world, true).find((h) => !(h.object instanceof THREE.InstancedMesh));
+		const hit = this.raycaster.intersectObject(this.world, true).find((h) => h.object.visible && !(h.object instanceof THREE.InstancedMesh));
 		return hit ? hit.point.y : terraceHeight(1);
 	}
 
@@ -683,8 +703,41 @@ export class KingdomScene implements View {
 	}
 
 	focusGrade(grade: number, immediate = false): void {
-		if (immediate) this.lookAt(this.gradePosition(grade), 14);
-		else this.flyTo(this.gradePosition(grade), 14);
+		// 距离按圈的大小来：外圈大，要站得远一点才看得全
+		const ring = ringOf(this.data, grade);
+		const dist = Math.min(38, Math.max(12, ring.r2 * SCALE * 1.5));
+		if (immediate) this.lookAt(this.gradePosition(grade), dist);
+		else this.flyTo(this.gradePosition(grade), dist);
+	}
+
+	// 只显示一个年级：台地、地块、迷雾、道路、村庄都只留这一圈，地图等于缩到这一年级。null 恢复全部。
+	setGradeFilter(grade: number | null): void {
+		this.gradeFilter = grade;
+		const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+		const show = (g: number) => grade === null || g === grade;
+		this.world.traverse((o) => {
+			if (o.userData.grade !== undefined) o.visible = show(o.userData.grade as number);
+		});
+		for (const view of this.plots.values()) {
+			const on = show(this.k.topic(view.id).grade);
+			view.group.visible = on;
+			this.pads.setMatrixAt(view.index, on ? this.padBase[view.index] : zero);
+			for (let j = 0; j < 3; j++) {
+				this.fog.setMatrixAt(view.index * 3 + j, on && view.status === "locked" ? this.fogBase[view.index * 3 + j] : zero);
+			}
+		}
+		this.pads.instanceMatrix.needsUpdate = true;
+		this.fog.instanceMatrix.needsUpdate = true;
+		this.pathGrades.forEach((g, i) => this.pathsMesh.setMatrixAt(i, show(g) ? this.pathsBase[i] : zero));
+		this.pathsMesh.instanceMatrix.needsUpdate = true;
+		this.data.villages.forEach((v, i) => this.plazasMesh.setMatrixAt(i, show(v.grade) ? this.plazasBase[i] : zero));
+		this.plazasMesh.instanceMatrix.needsUpdate = true;
+		if (this.lastMarks.length) this.villages(this.lastMarks);
+		// 镜头拉到能看见整圈的位置：筛选后这一圈就是整张地图
+		if (grade !== null) {
+			const ring = ringOf(this.data, grade);
+			this.flyTo(new THREE.Vector3(0, BASE_H, 0), Math.min(64, Math.max(16, ring.r2 * SCALE * 2.9)));
+		}
 	}
 
 	goHome(): void {
@@ -789,10 +842,19 @@ export class KingdomScene implements View {
 		const target = this.controls.target;
 		const showPlots = d < 12;
 		const range = d * 0.9 + 2;
+		const f = this.gradeFilter;
 		for (const v of this.plots.values()) {
-			v.label.visible = showPlots && Math.abs(v.pos.x - target.x) < range && Math.abs(v.pos.z - target.z) < range;
+			v.label.visible =
+				showPlots &&
+				Math.abs(v.pos.x - target.x) < range &&
+				Math.abs(v.pos.z - target.z) < range &&
+				(f === null || this.k.topic(v.id).grade === f);
 		}
-		for (const l of this.villageLabels) l.visible = d < 34;
-		for (const l of this.gradeLabels) l.visible = d > 6;
+		this.villageLabels.forEach((l, i) => {
+			l.visible = d < 34 && (f === null || this.data.villages[i].grade === f);
+		});
+		this.gradeLabels.forEach((l, i) => {
+			l.visible = d > 6 && (f === null || this.data.rings[i].grade === f);
+		});
 	}
 }
