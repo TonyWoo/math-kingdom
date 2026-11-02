@@ -276,8 +276,25 @@ export class KingdomScene implements View {
 	}
 
 	private addLabels(): void {
-		this.data.villages.forEach((v) => {
-			const label = new CSS2DObject(labelCard("village", v.name, v.unit));
+		this.data.villages.forEach((v, i) => {
+			const card = labelCard("village", v.name, v.unit);
+			// 村庄名牌也能点：打开村庄面板（保卫战入口）。广场在手机上太小，名牌是更大的点按目标。
+			// 转镜头时是拖动，按下/抬起位置接近才算点按。
+			card.style.pointerEvents = "auto";
+			card.style.cursor = "pointer";
+			let downAt: [number, number] | null = null;
+			card.addEventListener("pointerdown", (e) => {
+				downAt = [e.clientX, e.clientY];
+			});
+			card.addEventListener("pointerup", (e) => {
+				if (!downAt) return;
+				const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]);
+				downAt = null;
+				if (moved > 8) return;
+				this.spot = this.spotNearVillage(i);
+				this.onPick?.(`village:${i}`);
+			});
+			const label = new CSS2DObject(card);
 			label.center.set(0.5, 1);
 			// 名牌放在村庄外侧（远离王城的一边）
 			const ring = ringOf(this.data, v.grade);
