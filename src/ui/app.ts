@@ -59,6 +59,9 @@ export class App {
 	private selected: string | null = null;
 	private quiz: QuizState | null = null;
 	private gradeFilter: number | null = null; // 地图只显示这个年级，null = 全部
+	// 保卫战只能在第一人称里打：在地图上点开始时，请 main 把视角切过去（切完村庄面板会重开）
+	onNeedFirstPerson: (() => Promise<void>) | null = null;
+	private knownReady: Set<number> | null = null; // 已经知道可以保卫的村庄（第一次只登记，之后新增的才提示）
 	private dayOffset: number;
 	private spot: Spot | null = null; // “我在这里”：地图上的小人、第一人称的出发点
 	private toastTimer = 0;
@@ -150,6 +153,17 @@ export class App {
 		this.scene.villages?.(
 			this.k.data.villages.map((_, i) => (this.defense[i]?.won ? "defended" : canDefend(this.k, this.progress, i) ? "ready" : "none")),
 		);
+		// 刚变得可以保卫的村庄提醒一句，不然没人知道红旗能点、保卫战在哪
+		const ready = new Set(this.k.data.villages.map((_, i) => i).filter((i) => canDefend(this.k, this.progress, i)));
+		if (this.knownReady) {
+			for (const i of ready) {
+				if (!this.knownReady.has(i)) {
+					this.toast(`「${this.k.data.villages[i].name}」全村都到 2 颗星啦，村口插上了红旗！点红旗或广场，就能开始保卫战。`, 6000);
+					break;
+				}
+			}
+		}
+		this.knownReady = ready;
 	}
 
 	private openVillage(index: number): void {
@@ -167,6 +181,16 @@ export class App {
 	private startBattle(): void {
 		if (this.village === null) return;
 		if (!canDefend(this.k, this.progress, this.village)) return;
+		if (!this.scene.battle) {
+			// 地图视角没有战场：切到第一人称再开打（切换时村庄面板会关掉，切完重开）
+			if (!this.onNeedFirstPerson) return;
+			const i = this.village;
+			void this.onNeedFirstPerson().then(() => {
+				if (this.village === null) this.openVillage(i);
+				if (this.village !== null && !this.fight) this.startBattle();
+			});
+			return;
+		}
 		const b = createBattle(this.k, this.progress, this.village);
 		this.fight = { b, paused: false, input: "", note: "开始", mood: "talk" };
 		this.scene.battle?.start(b);
@@ -312,7 +336,7 @@ export class App {
 				<div class="action">${leave}</div>`;
 		}
 		return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
-			<div class="action"><button class="btn warm" data-act="bstart">${icon("castle")}开始保卫战</button><p class="hint">三波红方：骑士、狼、投石车，最后是哥布林大王。冲进广场 ${MAX_THROUGH} 个就算没守住</p>${leave}</div>`;
+			<div class="action"><button class="btn warm" data-act="bstart">${icon("castle")}开始保卫战</button><p class="hint">三波红方：骑士、狼、投石车，最后是哥布林大王。冲进广场 ${MAX_THROUGH} 个就算没守住${this.scene.battle ? "" : "。保卫战在村庄里打，点开始会带你走进村庄（第一人称）"}</p>${leave}</div>`;
 	}
 
 	private villageLine(): [string, Mood] {
@@ -662,7 +686,9 @@ export class App {
 		if (this.renderDialogue()) return;
 		const panel = $("panel");
 		panel.hidden = false;
-		if (this.quiz) {
+		if (this.village !== null) {
+			panel.innerHTML = this.villageHtml(); // 村庄面板（保卫战入口）：以前这里漏了，地图上打开村庄会报错
+		} else if (this.quiz) {
 			panel.innerHTML = this.quiz.outcome ? this.resultHtml() : this.quizHtml();
 		} else {
 			panel.innerHTML = this.topicHtml();

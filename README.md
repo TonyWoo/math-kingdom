@@ -21,7 +21,7 @@
 - **地图视角**（默认）：从空中俯看整座岛，拖动平移、缩放，点地块看详情。
 - **第一人称**（顶栏的「第一人称」按钮，或网址加 `?view=fp`）：整个王国变成方块世界，可以走进去。电脑上点一下画面锁定鼠标，WASD 移动、鼠标看、空格跳、Shift 跑，准星对着地块点击或按 E 打开详情，Esc 释放鼠标；手机上左半屏拖动走路、右半屏拖动转头，轻点地块打开详情。方块贴图都是代码生成的原创像素图。
   - **和动物老师对话答题**：在第一人称里打开一块地，这个领域的动物老师（数与代数是猫头鹰、图形与几何是狐狸、统计与概率是兔子、综合与实践是熊猫）会出现在你面前，用对话气泡打招呼、读题、讲解，会说出声音（全息面板右上角可以关掉）。答案在浮在空中的全息面板上选：点选项或数字键盘，键盘也能直接输入（手机和平板上全息面板贴在屏幕下方或右侧，按键更准、整块键盘都在屏幕里）。答对老师会跳起来，答错会歪着头给你讲。
-  - **保卫战**：一个村庄所有地块都到 2 颗星后，村庄路牌上会插一面红旗。对着路牌点击（或按 E、手机轻点）就能开始保卫战：你站上守望台，红方举着写着数字的盾牌沿小路走来，答出题目，防御塔就打中盾牌上是这个答案的敌人（他会变成彩色纸屑跑回家）；答错了敌人会往前冲。三波：骑士；骑士和跑得快的狼；最后是要打两次的投石车，压轴的哥布林大王盾牌上是一道两步算式，要打三次。冲进广场 3 个就算没守住（大王算 2 个）。敌人走得很慢（一二年级最慢），连续答对会快一点、答错会慢下来，随时可以暂停。只出这个村庄学过的填数题；正确率到 80% 就算这个村庄复习了一次。守住的村庄变成城镇：插金旗、围上石墙，广场旁边多一件奖励装饰（喷泉、雕像、花坛等），地图视角里也能看到。没守住不扣星，会告诉你哪些地方再复习一下。
+  - **保卫战**：一个村庄所有地块都到 2 颗星后，村庄路牌上会插一面红旗（刚达标时会弹一条提示）。在地图视角点红旗或村庄广场就能打开村庄面板，点「开始保卫战」会带你走进村庄；在第一人称里对着路牌点击（或按 E、手机轻点）也能开始保卫战：你站上守望台，红方举着写着数字的盾牌沿小路走来，答出题目，防御塔就打中盾牌上是这个答案的敌人（他会变成彩色纸屑跑回家）；答错了敌人会往前冲。三波：骑士；骑士和跑得快的狼；最后是要打两次的投石车，压轴的哥布林大王盾牌上是一道两步算式，要打三次。冲进广场 3 个就算没守住（大王算 2 个）。敌人走得很慢（一二年级最慢），连续答对会快一点、答错会慢下来，随时可以暂停。只出这个村庄学过的填数题；正确率到 80% 就算这个村庄复习了一次。守住的村庄变成城镇：插金旗、围上石墙，广场旁边多一件奖励装饰（喷泉、雕像、花坛等），地图视角里也能看到。没守住不扣星，会告诉你哪些地方再复习一下。
 
 两种视角共用同一份进度，随时可以切换。在地图上点哪里（地块或空地），那里就出现一个「我在这里」的小人；切到第一人称时从小人站的地方出发，切回地图时小人站到你走到的地方。位置会保存下来。
 
@@ -84,7 +84,8 @@ textures: WASD and mouse on desktop, a touch joystick on phones. Tapping the map
 person starts from it (walking around moves it back on the map). In first person a plot's questions come as a
 conversation with an animal teacher (owl, fox, rabbit or panda by domain) who speaks the lines aloud, and answers are
 picked on a holographic panel floating in the air (docked to the bottom or side of the screen on phones and tablets). Once every plot of a village has two stars, its sign gets a red flag
-and you can start a defense: knights, fast wolves, two-hit catapults and a Goblin King with a two-step expression on
+(a toast announces it, too); click the flag or the village plaza on the map to open the village panel, and Start walks
+you into the village to begin a defense: knights, fast wolves, two-hit catapults and a Goblin King with a two-step expression on
 its shield walk toward the plaza, and each correct answer lets a tower zap the enemy whose shield shows it (three slow
 waves that adapt to how well you answer, pause any time). Scoring 80% counts as a review of the whole village; a
 defended village becomes a walled town with a reward decoration, visible on the map too. Built with Vite, TypeScript and three.js; progress is stored in

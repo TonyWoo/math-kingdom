@@ -83,6 +83,7 @@ async function toggleFirstPerson(): Promise<void> {
 	fpLabel.textContent = toFp ? "地图视角" : "第一人称";
 }
 fpButton.onclick = () => void toggleFirstPerson();
+app.onNeedFirstPerson = () => toggleFirstPerson(); // 地图上点「开始保卫战」时切到第一人称
 if (new URLSearchParams(location.search).get("view") === "fp") void toggleFirstPerson();
 
 let last = performance.now();

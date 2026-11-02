@@ -375,7 +375,10 @@ export class KingdomScene implements View {
 		}
 		this.selection.clear();
 		this.selectRing.visible = !!id;
-		if (!id) return;
+		if (!id || id.startsWith("village:")) {
+			this.selectRing.visible = false; // 村庄没有地块选中圈
+			return;
+		}
 		const p = this.plots.get(id)!.pos;
 		this.selectRing.position.set(p.x, p.y + 0.08, p.z);
 		const arc = (from: THREE.Vector3, to: THREE.Vector3, color: number, radius: number) => {
@@ -473,7 +476,11 @@ export class KingdomScene implements View {
 			if (moved > 6) return;
 			const id = this.pick(e.clientX, e.clientY);
 			// 点到哪里，小人就站到哪里：点到地块时站在地块靠王城一侧、面朝它；点到空地就站在那里
-			const spot = id ? this.spotNear(id) : this.groundSpot(e.clientX, e.clientY);
+			const spot = id
+				? id.startsWith("village:")
+					? this.spotNearVillage(Number(id.slice(8)))
+					: this.spotNear(id)
+				: this.groundSpot(e.clientX, e.clientY);
 			if (spot) {
 				this.setSpot(spot);
 				this.onSpot(spot);
@@ -488,11 +495,18 @@ export class KingdomScene implements View {
 		const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
 		this.raycaster.setFromCamera(ndc, this.camera);
 		const groups = [...this.plots.values()].filter((v) => v.group.visible).map((v) => v.group);
-		const hits = this.raycaster.intersectObjects([this.pads, ...groups], true);
+		const hits = this.raycaster.intersectObjects([this.pads, this.plazasMesh, this.towns, ...groups], true);
 		for (const h of hits) {
 			if (h.object === this.pads && h.instanceId !== undefined) return this.k.order[h.instanceId];
+			// 村庄广场：只有插了旗（可以保卫或已守住）的村庄能点开，就是保卫战在地图上的入口
+			if (h.object === this.plazasMesh && h.instanceId !== undefined) {
+				const m = this.lastMarks[h.instanceId];
+				if (m === "ready" || m === "defended") return `village:${h.instanceId}`;
+				continue;
+			}
 			let o: THREE.Object3D | null = h.object;
-			while (o && !o.userData.id) o = o.parent;
+			while (o && o.userData.id === undefined && o.userData.village === undefined) o = o.parent;
+			if (o?.userData.village !== undefined) return `village:${o.userData.village as number}`;
 			if (o) return o.userData.id as string;
 		}
 		// 打在地面上：取 0.5 以内最近的地块
@@ -564,10 +578,12 @@ export class KingdomScene implements View {
 			const pole = new THREE.Mesh(geo.cyl8, mat(0x7a5233));
 			pole.scale.set(0.035, 0.9, 0.035);
 			pole.position.set(cx + 0.18, h + 0.45, cz);
+			pole.userData.village = i; // 点旗杆/旗子就是点这个村庄（保卫战入口）
 			const flag = new THREE.Mesh(geo.box, mat(m === "ready" ? 0xe0463a : 0xf2c230));
 			flag.scale.set(0.3, 0.18, 0.02);
 			flag.position.set(cx + 0.34, h + 0.8, cz);
 			flag.userData.wave = true;
+			flag.userData.village = i;
 			this.towns.add(pole, flag);
 			if (m !== "defended") return;
 			// 城墙：沿扇形边界放一排小石块
@@ -652,6 +668,13 @@ export class KingdomScene implements View {
 		// 跳过森林（InstancedMesh）和王城，只要地面
 		const hit = this.raycaster.intersectObject(this.world, true).find((h) => h.object.visible && !(h.object instanceof THREE.InstancedMesh));
 		return hit ? hit.point.y : terraceHeight(1);
+	}
+
+	// 村庄中心靠王城一侧，面朝广场
+	private spotNearVillage(index: number): Spot {
+		const v = this.data.villages[index];
+		const len = Math.hypot(v.x, v.y) || 1;
+		return { x: v.x - (v.x / len) * 60, y: v.y - (v.y / len) * 60, lookX: v.x, lookY: v.y };
 	}
 
 	// 地块靠王城一侧 0.6 个单位，面朝地块
