@@ -16,13 +16,13 @@
 		<div id="loading"><img src="/icons/icon-192.png" alt="" /><p>正在建造王国……</p></div>
 
 		<header class="topbar">
-			<h1><img src="/icons/favicon-64.png" alt="" />数学王国</h1>
+			<h1><img src="/icons/favicon-64.png" alt="" /><span class="lbl">数学王国</span></h1>
 			<div class="stats" id="stats"></div>
 			<div class="actions">
-				<button id="patrol" class="btn warm" title="去照看该复习的地块">今日巡视</button>
-				<button id="fp" class="btn fp" title="切换到第一人称，在方块世界里走">第一人称</button>
-				<button id="view" class="btn" title="切换斜视和俯视">俯视</button>
-				<button id="home" class="btn" title="回到王城"><img class="ic" src="/art/ui/icon_castle.png" alt="" />王城</button>
+				<button id="patrol" class="btn warm" title="去照看该复习的地块"><span class="lbl">今日巡视</span></button>
+				<button id="fp" class="btn fp" title="切换到第一人称，在方块世界里走"><img class="ic" src="/art/ui/icon_fp.png" alt="" /><span class="lbl">第一人称</span></button>
+				<button id="view" class="btn" title="切换斜视和俯视"><img class="ic" src="/art/ui/icon_view.png" alt="" /><span class="lbl">俯视</span></button>
+				<button id="home" class="btn" title="回到王城"><img class="ic" src="/art/ui/icon_castle.png" alt="" /><span class="lbl">王城</span></button>
 				<button id="settings-btn" class="btn icon" title="设置"><img class="ic" src="/art/ui/icon_settings.png" alt="设置" /></button>
 			</div>
 		</header>
@@ -45,6 +45,9 @@
 			<h2>设置</h2>
 			<p class="muted" id="save-state"></p>
 			<div class="row">
+				<button class="btn" id="music-toggle">音乐：开</button>
+			</div>
+			<div class="row">
 				<button class="btn" id="demo">载入演示进度</button>
 				<button class="btn danger" id="reset">清空进度</button>
 			</div>
@@ -54,6 +57,10 @@
 				<a href="https://github.com/xiaoyang111222/cn-math-taxonomy" target="_blank" rel="noopener">cn-math-taxonomy</a>
 				（<a href="https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans" target="_blank" rel="noopener">CC BY-NC 4.0</a>），
 				对齐人教版小学数学。这些内容由 AI 生成，<b>尚未经过教师审核</b>，如发现错题请反馈。
+			</p>
+			<p>
+				音乐来自 OpenGameArt 的 CC0 作品（Happy Adventure (Loop)、Horde War Drums loop、Victory Fanfare Short），出处见仓库
+				public/audio/CREDITS.md。
 			</p>
 			<p class="muted">进度只保存在这台设备的浏览器里。</p>
 			<form method="dialog"><button class="btn">关闭</button></form>

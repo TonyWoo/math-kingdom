@@ -696,8 +696,17 @@ dialog a {
 
 	.actions .btn {
 		min-height: 36px;
-		padding: 4px 10px;
+		padding: 4px 9px;
 		font-size: 14px;
+	}
+
+	/* 手机上顶栏只显示图标，省空间 */
+	.topbar .lbl {
+		display: none;
+	}
+
+	.topbar .btn .ic {
+		margin-right: 0;
 	}
 
 	.grades {

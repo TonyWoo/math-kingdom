@@ -16,6 +16,7 @@ import type { Question } from "../core/types";
 import { type Mood, TEACHERS } from "../scene/teachers";
 import type { Spot, View } from "../scene/view";
 import { speak as say, stopSpeaking } from "./speech";
+import { music } from "./music";
 
 const GRADE_NAME = ["一年级", "二年级", "三年级", "四年级", "五年级", "六年级"];
 const BUILDING_NAME = { mill: "磨坊", library: "图书馆", watchtower: "瞭望塔", market: "集市", plaza: "广场" };
@@ -170,6 +171,7 @@ export class App {
 		const b = createBattle(this.k, this.progress, this.village);
 		this.fight = { b, paused: false, input: "", note: "开始", mood: "talk" };
 		this.scene.battle?.start(b);
+		music.battle();
 		this.renderPanel();
 	}
 
@@ -177,6 +179,7 @@ export class App {
 		if (!this.fight) return;
 		this.scene.battle?.end();
 		this.fight = null;
+		music.home();
 	}
 
 	// 每帧推进战斗；有变化才重画面板
@@ -210,6 +213,8 @@ export class App {
 		const f = this.fight!;
 		const now = this.now();
 		f.result = settle(f.b, this.progress, now);
+		music.home();
+		if (f.result.won) music.celebrate();
 		const key = String(f.b.village);
 		const prev = this.defense[key];
 		this.defense[key] = { won: (prev?.won ?? false) || f.result.won, best: Math.max(prev?.best ?? 0, f.result.accuracy) };
@@ -384,7 +389,7 @@ export class App {
 		$("view").onclick = () => {
 			const s = this.scene as View & { toggleTopDown?: () => boolean };
 			if (!s.toggleTopDown) return;
-			$("view").textContent = s.toggleTopDown() ? "斜视" : "俯视";
+			$("view").querySelector(".lbl")!.textContent = s.toggleTopDown() ? "斜视" : "俯视";
 		};
 		$("patrol").onclick = () => {
 			const list = needsCare(this.k, this.progress, this.now());
@@ -419,6 +424,13 @@ export class App {
 			dialog.close();
 			this.toast("进度已清空，从头开始建造吧");
 		};
+		const musicBtn = $<HTMLButtonElement>("music-toggle");
+		const paintMusic = () => (musicBtn.textContent = music.enabled ? "音乐：开" : "音乐：关");
+		paintMusic();
+		musicBtn.onclick = () => {
+			music.setEnabled(!music.enabled);
+			paintMusic();
+		};
 		window.addEventListener("keydown", (e) => this.onKey(e));
 		window.addEventListener("resize", () => this.updateInset());
 	}
@@ -437,12 +449,12 @@ export class App {
 		const s = summary(this.k, this.progress, this.now());
 		const built = s.built + s.due + s.weeds + s.goblin;
 		$("stats").innerHTML =
-			`<span>${icon("house")}建成 <b>${built}</b> / ${s.total}</span>` +
+			`<span>${icon("house")}<span class="lbl">建成 </span><b>${built}</b> / ${s.total}</span>` +
 			`<span>${icon("star")}<b>${s.stars}</b></span>` +
-			`<span>${icon("foundation")}可建造 <b>${s.open}</b></span>` +
+			`<span>${icon("foundation")}<span class="lbl">可建造 </span><b>${s.open}</b></span>` +
 			(this.demo ? `<span class="muted">演示进度</span>` : "");
 		const care = s.due + s.weeds + s.goblin;
-		$("patrol").innerHTML = `${icon("patrol")}今日巡视${care ? `<span class="badge">${care}</span>` : ""}`;
+		$("patrol").innerHTML = `${icon("patrol")}<span class="lbl">今日巡视</span>${care ? `<span class="badge">${care}</span>` : ""}`;
 	}
 
 	// 当前镜头对着哪个年级（每帧调用）
@@ -892,7 +904,10 @@ export class App {
 		}
 		this.scene.refresh(this.progress, now, q.outcome.starsAfter > q.outcome.starsBefore ? q.session.id : undefined);
 		this.markVillages();
-		if (q.outcome.success && q.session.plan.kind !== "practice") this.scene.celebrate(q.session.id);
+		if (q.outcome.success && q.session.plan.kind !== "practice") {
+			this.scene.celebrate(q.session.id);
+			music.celebrate();
+		}
 		const unlocked = this.k.order.filter((id) => before.get(id) === "locked" && status(this.k, this.progress, id, now) === "open");
 		if (unlocked.length) {
 			this.toast(`迷雾散开了！解锁了新地块：${unlocked.map((id) => this.k.topic(id).name).join("、")}`, 5000);

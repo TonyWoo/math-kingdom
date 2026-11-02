@@ -19,11 +19,12 @@ document.getElementById("loading")?.remove();
 // 第一人称方块世界：第一次切换时才生成（生成地形要一点时间），之后两个视角来回切换
 let voxel: View | null = null;
 const fpButton = document.getElementById("fp")!;
+const fpLabel = fpButton.querySelector(".lbl")!;
 async function toggleFirstPerson(): Promise<void> {
 	const toFp = app.view === scene;
 	if (toFp && !voxel) {
 		fpButton.setAttribute("disabled", "");
-		fpButton.textContent = "生成中……";
+		fpLabel.textContent = "生成中……";
 		await new Promise((r) => setTimeout(r, 30)); // 让按钮文字先显示出来
 		const { VoxelScene } = await import("./voxel/voxel-scene");
 		const container = document.getElementById("voxel")!;
@@ -33,7 +34,7 @@ async function toggleFirstPerson(): Promise<void> {
 	}
 	app.setView(toFp ? voxel! : scene);
 	document.body.classList.toggle("fp-mode", toFp);
-	fpButton.textContent = toFp ? "地图视角" : "第一人称";
+	fpLabel.textContent = toFp ? "地图视角" : "第一人称";
 }
 fpButton.onclick = () => void toggleFirstPerson();
 if (new URLSearchParams(location.search).get("view") === "fp") void toggleFirstPerson();
