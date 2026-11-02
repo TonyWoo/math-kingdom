@@ -7,6 +7,7 @@ const KEY = "math-kingdom/v1";
 export interface SaveData {
 	progress: Progress;
 	demo?: boolean; // 是演示进度（设置里可以清空）
+	defense?: Record<string, { won: boolean; best: number }>; // 保卫战记录，键是村庄序号
 }
 
 export function load(): SaveData | null {

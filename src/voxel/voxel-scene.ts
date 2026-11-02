@@ -10,12 +10,13 @@ import { type Kingdom, type Progress, type Status, stars as starsOf, status as s
 import type { KingdomData } from "../core/types";
 import { labelCard } from "../scene/label";
 import { type Mood, TEACHERS } from "../scene/teachers";
-import type { Dialogue, View } from "../scene/view";
+import type { BattleView, Dialogue, View, VillageMark } from "../scene/view";
+import { type Battle, type BattleEvent, current as battleTarget } from "../core/defense";
 import { speak, stopSpeaking } from "../ui/speech";
 import { type Atlas, createAtlas } from "./atlas";
 import { type Box, MeshBuilder, block } from "./mesher";
-import { type Part, type Structure, buildingStructure, castleStructure, goblinStructure, openStructure, teacherBoxes, treeBoxes, weedsStructure } from "./structures";
-import { BASE, BLOCK, type Ground, type PlotCell, type TerrainData, buildTerrain } from "./terrain";
+import { type Part, type Structure, buildingStructure, castleStructure, goblinStructure, knightBoxes, openStructure, teacherBoxes, towerBoxes, treeBoxes, weedsStructure } from "./structures";
+import { BASE, BLOCK, type Ground, type PlotCell, type TerrainData, attackPath, buildTerrain } from "./terrain";
 import { Player } from "./player";
 
 const CHUNK = 32;
@@ -97,6 +98,29 @@ export class VoxelScene implements View {
 	private talking = false;
 	private selectedId: string | null = null;
 	private voice = true;
+	// ---- 保卫战 ----
+	private villageHits: THREE.Mesh[] = [];
+	private villageFlags = new THREE.Group();
+	private fight: {
+		b: Battle;
+		pts: THREE.Vector3[];
+		lengths: number[];
+		towers: THREE.Vector3[];
+		group: THREE.Group;
+		enemies: Map<number, { mesh: THREE.Group; label: CSS2DObject; gone: number }>;
+		beams: { mesh: THREE.Mesh; age: number }[];
+	} | null = null;
+	private knightGeo: THREE.BufferGeometry | null = null;
+	private hurt: HTMLElement;
+	// 竖屏保卫战：全息面板贴在屏幕底部，老师的台词是面板上方的横幅（3D 里放不下，会挡住路线）
+	private dock: HTMLElement;
+	private docked = false;
+	readonly battle: BattleView = {
+		start: (b) => this.startBattle(b),
+		events: (ev) => this.battleEvents(ev),
+		end: () => this.endBattle(),
+	};
+
 	readonly dialogue: Dialogue = {
 		host: () => this.holoBody,
 		say: (text, mood) => this.say(text, mood),
@@ -183,6 +207,16 @@ export class VoxelScene implements View {
 			? "<b>点击画面开始</b><span>WASD 移动 · 鼠标看 · 空格跳 · Shift 跑</span><span>准星对着地块，点击或按 E 查看 · Esc 释放鼠标</span>"
 			: "<b>左手拖动走路，右手拖动看</b><span>点一下地块查看</span>";
 		container.appendChild(this.help);
+
+		this.dock = document.createElement("div");
+		this.dock.className = "holo-dock";
+		this.dock.innerHTML = '<div class="dock-say"></div>';
+		this.dock.hidden = true;
+		container.appendChild(this.dock);
+		this.hurt = document.createElement("div");
+		this.hurt.className = "fp-hurt";
+		container.appendChild(this.hurt);
+		this.scene.add(this.villageFlags);
 
 		this.player = new Player(this.renderer.domElement, (x, z) => this.topAt(x, z));
 		this.player.onInteract = (screen) => this.interact(screen);
@@ -296,8 +330,29 @@ export class VoxelScene implements View {
 			label.position.set(v.x + 0.5, v.h + 2.7, v.z + 0.5);
 			this.scene.add(label);
 			this.villageLabels.push(label);
+			// 路牌的拾取盒：对着点击是“保卫村庄”
+			const hit = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4, 1.6), new THREE.MeshBasicMaterial({ visible: false }));
+			hit.position.set(v.x + 0.5, v.h + 2, v.z + 0.5);
+			hit.userData.id = `village:${v.index}`;
+			this.scene.add(hit);
+			this.villageHits.push(hit);
 		}
 		this.scene.add(new THREE.Mesh(b.build(), this.material));
+	}
+
+	// 路牌顶上的旗：可以保卫的插红旗，守住过的插金旗
+	villages(marks: VillageMark[]): void {
+		for (const c of this.villageFlags.children) (c as THREE.Mesh).geometry.dispose();
+		this.villageFlags.clear();
+		const b = new MeshBuilder(this.atlas);
+		marks.forEach((m, i) => {
+			if (m === "none") return;
+			const v = this.terrain.villages[i];
+			const y = v.h + 2.4;
+			b.box({ min: [v.x + 0.46, y, v.z + 0.46], max: [v.x + 0.54, y + 1.1, v.z + 0.54], type: "log" });
+			b.box({ min: [v.x + 0.54, y + 0.6, v.z + 0.47], max: [v.x + 1.25, y + 1.05, v.z + 0.53], type: m === "ready" ? "wool_red" : "gold" });
+		});
+		if (!b.empty) this.villageFlags.add(new THREE.Mesh(b.build(), this.material));
 	}
 
 	private addPlots(): void {
@@ -450,8 +505,8 @@ export class VoxelScene implements View {
 			this.endDialogue();
 			if (id) this.startDialogue();
 		}
-		this.highlight.visible = !!id;
-		if (!id) return;
+		this.highlight.visible = !!id && !id.startsWith("village:");
+		if (!id || id.startsWith("village:")) return;
 		const v = this.plots.get(id)!;
 		const top = v.group.children.length ? new THREE.Box3().setFromObject(v.group).max.y - (v.cell.h + 1) : 1;
 		const h = Math.max(1, top + 0.2);
@@ -461,17 +516,20 @@ export class VoxelScene implements View {
 
 	celebrate(id: string): void {
 		const v = this.plots.get(id)!;
-		const n = 70;
+		this.burstAt(new THREE.Vector3(v.cell.x + 0.5, v.cell.h + 2, v.cell.z + 0.5), 0xffd23f, 70);
+	}
+
+	private burstAt(at: THREE.Vector3, color: number, n: number): void {
 		const pos = new Float32Array(n * 3);
 		const vel = new Float32Array(n * 3);
 		for (let i = 0; i < n; i++) {
-			pos.set([v.cell.x + 0.5, v.cell.h + 2, v.cell.z + 0.5], i * 3);
+			pos.set([at.x, at.y, at.z], i * 3);
 			const a = Math.random() * Math.PI * 2;
 			vel.set([Math.cos(a) * (1 + Math.random() * 2), 4 + Math.random() * 4, Math.sin(a) * (1 + Math.random() * 2)], i * 3);
 		}
 		const g = new THREE.BufferGeometry();
 		g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-		const points = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffd23f, size: 0.18, transparent: true }));
+		const points = new THREE.Points(g, new THREE.PointsMaterial({ color, size: 0.18, transparent: true }));
 		this.scene.add(points);
 		this.bursts.push({ points, v: vel, age: 0 });
 	}
@@ -576,7 +634,7 @@ export class VoxelScene implements View {
 		this.raycaster.setFromCamera(ndc, this.camera);
 		this.raycaster.far = screen ? 30 : 9;
 		const hits = this.raycaster.intersectObjects(
-			[...this.plots.values()].map((v) => v.hit),
+			[...this.villageHits, ...[...this.plots.values()].map((v) => v.hit)],
 			false,
 		);
 		return hits.length ? (hits[0].object.userData.id as string) : null;
@@ -658,6 +716,7 @@ export class VoxelScene implements View {
 		});
 
 		this.animateTeacher(dt);
+		this.animateBattle(dt);
 		this.renderer.render(this.scene, this.camera);
 		this.labels.render(this.scene, this.camera);
 		if (this.teacher) this.css3d.render(this.scene, this.camera);
@@ -665,12 +724,11 @@ export class VoxelScene implements View {
 
 	// 对话开始：老师站在玩家面前偏左的地上，全息面板浮在偏右（竖屏时在下方），都朝着玩家
 	private startDialogue(): void {
-		const id = this.selectedId!;
-		const topic = this.k.topic(id);
-		const t = TEACHERS[topic.domain];
+		const t = TEACHERS[this.domainOf(this.selectedId!)];
 		this.holoName.textContent = `${t.name}的全息面板`;
 		const yaw = this.player.yaw;
-		this.player.pitch = -0.06;
+		const battle = this.fight !== null;
+		if (!battle) this.player.pitch = -0.06; // 保卫战时保持低头看路线
 		this.player.update(0, this.camera);
 		const f = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
 		const r = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
@@ -705,8 +763,9 @@ export class VoxelScene implements View {
 				}
 			}
 		} else {
-			// 竖屏时面板占下半屏，老师站在一朵小云上浮在面板上方
-			ground = eye.y - 0.7;
+			// 竖屏时面板占下半屏，老师站在一朵小云上浮在面板上方（保卫战时镜头低着头，老师放低一点）
+			ground = eye.y - (battle ? 1.15 : 0.7);
+			if (battle) spot = eye.clone().add(f.clone().multiplyScalar(3.6)).add(r.clone().multiplyScalar(-0.6));
 		}
 		if (portrait) {
 			const b = new MeshBuilder(this.atlas);
@@ -724,18 +783,35 @@ export class VoxelScene implements View {
 		group.add(this.speech);
 
 		// 全息面板：1 像素 = PX 格
-		const px = portrait ? 0.0024 : 0.0027;
+		// 保卫战时面板小一点、往右下挪，把中间留给进攻路线
+		const px = portrait ? (battle ? 0.0019 : 0.0024) : battle ? 0.0022 : 0.0027;
 		const panelPos = portrait
-			? eye.clone().add(f.clone().multiplyScalar(1.75)).add(new THREE.Vector3(0, -0.6, 0))
-			: eye.clone().add(f.clone().multiplyScalar(2.0)).add(r.clone().multiplyScalar(0.6)).add(new THREE.Vector3(0, -0.1, 0));
+			? eye.clone().add(f.clone().multiplyScalar(1.75)).add(new THREE.Vector3(0, battle ? -0.8 : -0.6, 0))
+			: battle
+				? eye.clone().add(f.clone().multiplyScalar(2.0)).add(r.clone().multiplyScalar(0.95)).add(new THREE.Vector3(0, -0.38, 0))
+				: eye.clone().add(f.clone().multiplyScalar(2.0)).add(r.clone().multiplyScalar(0.6)).add(new THREE.Vector3(0, -0.1, 0));
 		this.holo.position.copy(panelPos);
-		this.holo.rotation.set(0, yaw + (portrait ? 0 : -0.28), 0);
+		// 面板正对着镜头：跟着朝向转，保卫战低头时也跟着前倾
+		this.holo.rotation.set(battle ? this.player.pitch : 0, yaw + (portrait ? 0 : -0.28), 0, "YXZ");
 		this.holo.scale.setScalar(px);
 		this.holo.element.classList.toggle("portrait", portrait);
-		this.scene.add(this.holo);
+		this.docked = portrait && battle;
+		if (this.docked) {
+			group.visible = false;
+			this.holo.element.style.transform = "";
+			this.dock.appendChild(this.holo.element);
+			this.dock.hidden = false;
+		} else {
+			this.scene.add(this.holo);
+		}
 		this.container.classList.add("in-dialogue");
 		this.highlight.visible = false;
 		this.mood = { mood: "talk", t: 0 };
+	}
+
+	// 选中的是地块还是村庄路牌（"village:序号"）
+	private domainOf(id: string) {
+		return id.startsWith("village:") ? this.data.villages[Number(id.slice(8))].domain : this.k.topic(id).domain;
 	}
 
 	private endDialogue(): void {
@@ -743,21 +819,31 @@ export class VoxelScene implements View {
 		this.teacher.remove(this.speech);
 		this.scene.remove(this.teacher);
 		this.scene.remove(this.holo);
+		if (this.docked) {
+			this.holo.element.remove();
+			this.dock.hidden = true;
+			this.docked = false;
+		}
 		this.teacher = null;
 		this.talking = false;
 		stopSpeaking();
 		this.container.classList.remove("in-dialogue");
-		this.highlight.visible = !!this.selectedId;
+		this.highlight.visible = !!this.selectedId && !this.selectedId.startsWith("village:");
 	}
 
 	private say(text: string, mood: Mood): void {
 		const el = this.speech.element;
 		el.innerHTML = "";
 		const who = document.createElement("b");
-		who.textContent = this.selectedId ? TEACHERS[this.k.topic(this.selectedId).domain].name : "";
+		who.textContent = this.selectedId ? TEACHERS[this.domainOf(this.selectedId)].name : "";
 		const line = document.createElement("span");
 		line.textContent = text;
 		el.append(who, line);
+		if (this.docked) {
+			const banner = this.dock.querySelector(".dock-say")!;
+			banner.innerHTML = "";
+			banner.append(who.cloneNode(true), line.cloneNode(true));
+		}
 		this.mood = { mood, t: 0 };
 		this.talking = true;
 		if (this.voice) speak(text);
@@ -786,5 +872,190 @@ export class VoxelScene implements View {
 			body.position.y = Math.sin(this.clock * 2) * 0.02; // 站着轻轻呼吸
 		}
 		g.position.y = base;
+	}
+
+	// ---- 保卫战 ----
+
+	// 摆战场：算进攻路线；玩家站到广场后面（背对进攻方向的那一侧），面朝来路；广场两边各一座防御塔
+	private startBattle(b: Battle): void {
+		this.endBattle();
+		const cells = attackPath(this.terrain, b.village, this.data, this.solid) ?? attackPath(this.terrain, b.village, this.data);
+		if (!cells) return;
+		const pts = cells.map(([x, z]) => new THREE.Vector3(x + 0.5, this.terrain.column(x, z)!.h + 1, z + 0.5));
+		const lengths = [0];
+		for (let i = 1; i < pts.length; i++) lengths.push(lengths[i - 1] + pts[i].distanceTo(pts[i - 1]));
+		const plaza = pts.at(-1)!;
+		const from = pts[Math.max(0, pts.length - 8)];
+		const d = plaza.clone().sub(from).setY(0).normalize();
+		const perp = new THREE.Vector3(-d.z, 0, d.x);
+		// 站位：沿进攻方向往后退 3–6 格，找能站的格子
+		let stand = plaza.clone();
+		for (const back of [4, 3, 5, 6, 2]) {
+			const p = plaza.clone().add(d.clone().multiplyScalar(back));
+			if (Number.isFinite(this.topAt(Math.floor(p.x), Math.floor(p.z)))) {
+				stand = p;
+				break;
+			}
+		}
+		const look = pts[Math.floor(pts.length * 0.4)];
+		const sx = Math.floor(stand.x);
+		const sz = Math.floor(stand.z);
+		this.player.teleport(sx + 0.5, sz + 0.5, look.x, look.z);
+		// 守望台：在玩家脚下搭 3 格高的木台，站上去越过房子看整条进攻路线
+		const groundY = this.player.position.y;
+		const deck = groundY + 3;
+		this.player.lockY = deck;
+		const eyeY = deck + 1.62;
+		this.player.pitch = Math.atan2(look.y + 0.8 - eyeY, Math.hypot(look.x - sx - 0.5, look.z - sz - 0.5));
+		this.player.update(0, this.camera);
+
+		const group = new THREE.Group();
+		const towers: THREE.Vector3[] = [];
+		const b2 = new MeshBuilder(this.atlas);
+		for (const [ox, oz] of [
+			[-1, -1],
+			[1, -1],
+			[-1, 1],
+			[1, 1],
+		]) {
+			b2.box({ min: [sx + 0.5 + ox * 1.1 - 0.12, groundY, sz + 0.5 + oz * 1.1 - 0.12], max: [sx + 0.5 + ox * 1.1 + 0.12, deck, sz + 0.5 + oz * 1.1 + 0.12], type: "log" });
+		}
+		b2.box({ min: [sx - 0.8, deck - 0.2, sz - 0.8], max: [sx + 1.8, deck, sz + 1.8], type: "planks" });
+		for (const side of [-1.8, 1.8]) {
+			const p = plaza.clone().add(perp.clone().multiplyScalar(side)).add(d.clone().multiplyScalar(0.8));
+			const col = this.terrain.column(Math.floor(p.x), Math.floor(p.z));
+			const y = col ? col.h + 1 : plaza.y;
+			b2.boxes(towerBoxes(), [p.x, y, p.z]);
+			towers.push(new THREE.Vector3(p.x, y + 3.1, p.z));
+		}
+		group.add(new THREE.Mesh(b2.build(), this.material));
+		this.scene.add(group);
+		if (!this.knightGeo) {
+			const kb = new MeshBuilder(this.atlas);
+			kb.boxes(knightBoxes());
+			this.knightGeo = kb.build();
+		}
+		this.fight = { b, pts, lengths, towers, group, enemies: new Map(), beams: [] };
+		// 镜头换了位置，老师和全息面板重新摆
+		if (this.teacher) {
+			this.endDialogue();
+			this.startDialogue();
+		}
+		this.container.classList.add("in-battle");
+	}
+
+	private endBattle(): void {
+		const f = this.fight;
+		if (!f) return;
+		// 从守望台下来，回到地面
+		this.player.lockY = null;
+		for (const e of f.enemies.values()) {
+			e.mesh.remove(e.label);
+			f.group.remove(e.mesh);
+		}
+		for (const beam of f.beams) f.group.remove(beam.mesh);
+		this.scene.remove(f.group);
+		this.fight = null;
+		this.container.classList.remove("in-battle");
+	}
+
+	// 路上的位置：progress 0 在村口，1 在广场
+	private along(progress: number): { pos: THREE.Vector3; dir: THREE.Vector3 } {
+		const f = this.fight!;
+		const total = f.lengths.at(-1)!;
+		const s = Math.max(0, Math.min(1, progress)) * total;
+		let i = 1;
+		while (i < f.lengths.length - 1 && f.lengths[i] < s) i++;
+		const a = f.pts[i - 1];
+		const b = f.pts[i];
+		const t = f.lengths[i] === f.lengths[i - 1] ? 0 : (s - f.lengths[i - 1]) / (f.lengths[i] - f.lengths[i - 1]);
+		return { pos: a.clone().lerp(b, t), dir: b.clone().sub(a).normalize() };
+	}
+
+	private battleEvents(ev: BattleEvent[]): void {
+		const f = this.fight;
+		if (!f) return;
+		for (const e of ev) {
+			if (e.type === "zap") {
+				const at = this.along(e.enemy.progress).pos.add(new THREE.Vector3(0, 0.8, 0));
+				const tower = f.towers.reduce((best, t) => (t.distanceTo(at) < best.distanceTo(at) ? t : best));
+				const len = tower.distanceTo(at);
+				const beam = new THREE.Mesh(
+					new THREE.CylinderGeometry(0.06, 0.06, len, 6),
+					new THREE.MeshBasicMaterial({ color: 0x7ff6ff, transparent: true, opacity: 0.9 }),
+				);
+				beam.position.copy(tower).add(at).multiplyScalar(0.5);
+				beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), at.clone().sub(tower).normalize());
+				f.group.add(beam);
+				f.beams.push({ mesh: beam, age: 0 });
+				this.burstAt(at, 0xffd23f, 50);
+				this.burstAt(at, 0xff7ad9, 30);
+			} else if (e.type === "rush") {
+				const entry = f.enemies.get(e.enemy.id);
+				entry?.label.element.classList.add("rush");
+				setTimeout(() => entry?.label.element.classList.remove("rush"), 700);
+			} else if (e.type === "through") {
+				this.hurt.classList.remove("on");
+				void this.hurt.offsetWidth; // 重新触发动画
+				this.hurt.classList.add("on");
+			}
+		}
+	}
+
+	private animateBattle(dt: number): void {
+		const f = this.fight;
+		if (!f) return;
+		const target = battleTarget(f.b);
+		for (const e of f.b.enemies) {
+			let entry = f.enemies.get(e.id);
+			if (e.state === "waiting") continue;
+			if (!entry) {
+				const mesh = new THREE.Group();
+				mesh.add(new THREE.Mesh(this.knightGeo!, this.material));
+				const el = document.createElement("div");
+				el.className = "label card shield";
+				const label = new CSS2DObject(el);
+				label.center.set(0.5, 1);
+				label.position.set(0, 1.45, 0);
+				mesh.add(label);
+				f.group.add(mesh);
+				entry = { mesh, label, gone: 0 };
+				f.enemies.set(e.id, entry);
+			}
+			const el = entry.label.element;
+			if (el.textContent !== e.number) el.textContent = e.number;
+			el.classList.toggle("target", target?.id === e.id);
+			if (e.state === "walking") {
+				const { pos, dir } = this.along(e.progress);
+				entry.mesh.position.copy(pos);
+				entry.mesh.position.y += Math.abs(Math.sin(this.clock * 6 + e.id)) * 0.06;
+				entry.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+			} else if (entry.gone < 1) {
+				// 被打中：变成星星后缩小、往回跑；冲进广场：缩小消失
+				entry.gone = Math.min(1, entry.gone + dt / 1.2);
+				if (e.state === "zapped") {
+					const back = this.along(Math.max(0, e.progress - entry.gone * 0.3));
+					entry.mesh.position.copy(back.pos);
+					entry.mesh.rotation.y = Math.atan2(-back.dir.x, -back.dir.z);
+				}
+				const s = 1 - entry.gone;
+				entry.mesh.scale.setScalar(Math.max(0.01, s));
+				entry.label.visible = false;
+				if (entry.gone >= 1) {
+					entry.mesh.remove(entry.label);
+					f.group.remove(entry.mesh);
+				}
+			}
+		}
+		f.beams = f.beams.filter((beam) => {
+			beam.age += dt;
+			(beam.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.9 - beam.age * 2.5);
+			if (beam.age > 0.4) {
+				f.group.remove(beam.mesh);
+				beam.mesh.geometry.dispose();
+				return false;
+			}
+			return true;
+		});
 	}
 }

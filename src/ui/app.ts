@@ -11,6 +11,7 @@ import { type Kingdom, type Progress, type Status, demoProgress, needsCare, star
 import { answerCount } from "../core/judge";
 import { type Outcome, type Plan, QuizSession, planFor } from "../core/quiz";
 import * as save from "../core/save";
+import { type Battle, type BattleResult, MAX_THROUGH, WAVES, answer as battleAnswer, canDefend, createBattle, current as battleTarget, settle, step as battleStep, villageReady } from "../core/defense";
 import type { Question } from "../core/types";
 import { type Mood, TEACHERS } from "../scene/teachers";
 import type { View } from "../scene/view";
@@ -71,6 +72,7 @@ export class App {
 		} else {
 			this.progress = saved?.progress ?? {};
 			this.demo = saved?.demo ?? false;
+			this.defense = saved?.defense ?? {};
 		}
 
 		this.attach(scene);
@@ -96,13 +98,189 @@ export class App {
 
 	// 接上一个视角：点选回调、当前进度
 	private attach(view: View): void {
-		view.onPick = (id) => (id ? this.open(id, false) : this.close());
+		view.onPick = (id) => {
+			if (!id) this.close();
+			else if (id.startsWith("village:")) this.openVillage(Number(id.slice(8)));
+			else this.open(id, false);
+		};
 		view.refresh(this.progress, this.now());
+		this.markVillages();
+	}
+
+	// ---- 保卫战（第一人称） ----
+	private village: number | null = null; // 打开的村庄路牌
+	private defense: Record<string, { won: boolean; best: number }> = {};
+	private fight: {
+		b: Battle;
+		paused: boolean;
+		input: string;
+		note: string; // 老师要说的一句（打中、冲过来、新一波……）
+		result?: BattleResult;
+	} | null = null;
+
+	// 村庄路牌上的旗：可以保卫的红旗，守住过的金旗
+	private markVillages(): void {
+		this.scene.villages?.(
+			this.k.data.villages.map((_, i) => (this.defense[i]?.won ? "defended" : canDefend(this.k, this.progress, i) ? "ready" : "none")),
+		);
+	}
+
+	private openVillage(index: number): void {
+		if (this.quiz && !this.quiz.outcome) {
+			this.toast("先把这次答题做完吧");
+			return;
+		}
+		this.quiz = null;
+		this.selected = null;
+		this.village = index;
+		this.scene.select(`village:${index}`);
+		this.renderPanel();
+	}
+
+	private startBattle(): void {
+		if (this.village === null) return;
+		const b = createBattle(this.k, this.progress, this.village);
+		this.fight = { b, paused: false, input: "", note: "开始" };
+		this.scene.battle?.start(b);
+		this.renderPanel();
+	}
+
+	private stopBattle(): void {
+		if (!this.fight) return;
+		this.scene.battle?.end();
+		this.fight = null;
+	}
+
+	// 每帧推进战斗；有变化才重画面板
+	private stepBattle(dt: number): void {
+		const f = this.fight;
+		if (!f || f.paused || f.result || !this.scene.battle) return;
+		const ev = battleStep(f.b, dt);
+		if (!ev.length) return;
+		this.scene.battle.events(ev);
+		for (const e of ev) {
+			if (e.type === "through") f.note = `糟糕，有一个骑士冲进广场了！还能再挡住 ${Math.max(0, MAX_THROUGH - f.b.through)} 个。`;
+			if (e.type === "wave") f.note = `第 ${e.wave + 1} 波来了，骑士更快啦！`;
+		}
+		if (f.b.finished) this.finishBattle();
+		else this.renderPanel();
+	}
+
+	private finishBattle(): void {
+		const f = this.fight!;
+		const now = this.now();
+		f.result = settle(f.b, this.progress, now);
+		const key = String(f.b.village);
+		const prev = this.defense[key];
+		this.defense[key] = { won: (prev?.won ?? false) || f.result.won, best: Math.max(prev?.best ?? 0, f.result.accuracy) };
+		this.persist();
+		this.scene.refresh(this.progress, now);
+		this.markVillages();
+		this.render();
+		this.renderPanel();
+	}
+
+	private battleKey(k: string): void {
+		const f = this.fight;
+		if (!f || f.result || f.paused || !battleTarget(f.b)) return;
+		if (k === "确定") {
+			if (!f.input.trim()) return;
+			const res = battleAnswer(f.b, f.input);
+			f.input = "";
+			if (res) {
+				this.scene.battle?.events(res.events);
+				const q = res.question;
+				f.note = res.correct
+					? ["打中啦！", "漂亮，打中了！", "太准了！", "又打倒一个！"][f.b.correct % 4]
+					: `哎呀，它冲过来了！刚才的答案是 ${q.answer}。${q.explanation ?? ""}`;
+				if (f.b.finished) return this.finishBattle();
+			}
+		} else if (k === "⌫") f.input = f.input.slice(0, -1);
+		else if (k === "清空") f.input = "";
+		else if (f.input.length < 12) f.input += k;
+		this.renderPanel();
+	}
+
+	private villageHtml(): string {
+		const i = this.village!;
+		const v = this.k.data.villages[i];
+		const leave = `<button class="btn ghost" data-act="close">下次再来</button>`;
+		const f = this.fight;
+		if (f?.result) {
+			const r = f.result;
+			const weak = r.weak.length
+				? `<h3>这些地方再复习一下</h3>${r.weak.map((id) => `<button class="prereq" data-go="${id}"><span class="tag no">复习</span>${esc(this.k.topic(id).name)}</button>`).join("")}`
+				: "";
+			return `
+				<div class="result">
+					<div class="big">${icon(r.won ? "crown" : "wrong", "xl")}</div>
+					<h2>${r.won ? "守住啦！" : "这次没守住"}</h2>
+					<p>正确率 ${Math.round(r.accuracy * 100)}%${r.reviewed.length ? `，算作复习了 ${r.reviewed.length} 个知识点` : ""}。</p>
+				</div>
+				${weak}
+				<div class="action"><button class="btn primary" data-act="bstart">再打一次</button><button class="btn ghost" data-act="close">离开</button></div>`;
+		}
+		if (f) {
+			const b = f.b;
+			const hearts = Array.from({ length: MAX_THROUGH }, (_, j) => `<span class="${j < MAX_THROUGH - b.through ? "on" : ""}">♥</span>`).join("");
+			const head = `<div class="battle-head"><span>保卫「${esc(v.name)}」</span><span>第 ${b.wave + 1} / ${WAVES.length} 波</span><span class="hearts">${hearts}</span>
+				<button class="btn ghost pause" data-act="bpause">${f.paused ? "继续" : "暂停"}</button></div>`;
+			if (f.paused) return `${head}<p class="wait">暂停中……点“继续”接着打。</p>`;
+			const t = battleTarget(b);
+			if (!t) return `${head}<p class="wait">等待红方骑士……</p>`;
+			return `${head}
+				<div class="prompt"><span class="text">${esc(t.question.prompt)}</span>${
+					"speechSynthesis" in window ? `<button class="speak" data-act="speak" title="读题">${icon("speaker")}</button>` : ""
+				}</div>
+				<p class="hint">答案就是走在最前面的骑士盾牌上的数</p>
+				<div class="entry">${f.input ? esc(f.input) : '<span class="placeholder">输入答案</span>'}</div>
+				${this.keypadHtml()}`;
+		}
+		const ready = villageReady(this.k, this.progress, i);
+		const chips = `<div class="chips"><span class="chip">${esc(v.unit)}</span><span class="chip">${v.plots.length} 块地</span>${
+			this.defense[i]?.won ? `<span class="chip">已守住 · 最好 ${Math.round(this.defense[i].best * 100)}%</span>` : ""
+		}</div>`;
+		if (!ready.ready) {
+			return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
+				<h3>还没到 2 颗星的地</h3>${ready.missing.map((id) => `<button class="prereq" data-go="${id}"><span class="tag no">${stars(this.progress, id)} 星</span>${esc(this.k.topic(id).name)}</button>`).join("")}
+				<div class="action">${leave}</div>`;
+		}
+		return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
+			<div class="action"><button class="btn warm" data-act="bstart">${icon("castle")}开始保卫战</button><p class="hint">三波红方骑士，冲进广场 ${MAX_THROUGH} 个就算没守住</p>${leave}</div>`;
+	}
+
+	private villageLine(): [string, Mood] {
+		const i = this.village!;
+		const v = this.k.data.villages[i];
+		const teacher = TEACHERS[v.domain];
+		const name = `「${v.name}」`;
+		const f = this.fight;
+		if (f?.result) {
+			const r = f.result;
+			return r.won
+				? [`我们守住${name}啦！正确率 ${Math.round(r.accuracy * 100)}%，你真是了不起的守护者！`, "cheer"]
+				: ["这次没守住……没关系，看看哪几题错了，复习一下再来挑战！", "sad"];
+		}
+		if (f) {
+			if (f.paused) return ["先休息一下，准备好了就点继续。", "talk"];
+			const t = battleTarget(f.b);
+			const intro = f.note === "开始" ? "红方骑士要来抢旗子了！每个骑士的盾牌上都有一个数，算出答案，防御塔就会打中它。" : f.note;
+			const ask = t ? `最前面的骑士：${t.question.prompt}` : "";
+			const happy = f.note.startsWith("打中") || f.note.startsWith("漂亮") || f.note.startsWith("太准") || f.note.startsWith("又打");
+			return [`${intro}${ask ? (intro ? " " : "") + ask : ""}`, f.note.startsWith("哎呀") || f.note.startsWith("糟糕") ? "sad" : happy ? "happy" : "talk"];
+		}
+		const ready = villageReady(this.k, this.progress, i);
+		if (!ready.ready) {
+			return [`${name}还有 ${ready.missing.length} 块地不到 2 颗星。房子都盖好了，才能保卫村庄哦。`, "talk"];
+		}
+		if (this.defense[i]?.won) return [`${teacher.hello}${name}已经守住过啦！要不要再来一场练习战？`, "happy"];
+		return [`${teacher.hello}${name}的房子都盖好啦！红方骑士要来抢旗子，我们一起保卫村庄吧！`, "talk"];
 	}
 
 	// 切换视角（地图 ↔ 第一人称）：新视角同步进度和选中的地块，并把镜头或玩家带到选中的地块
 	setView(view: View): void {
 		if (view === this.scene) return;
+		if (this.village !== null) this.close(); // 保卫战只在第一人称里
 		this.scene.show(false);
 		this.scene = view;
 		this.attach(view);
@@ -128,7 +306,7 @@ export class App {
 	}
 
 	private persist(): void {
-		save.store({ progress: this.progress, demo: this.demo });
+		save.store({ progress: this.progress, demo: this.demo, defense: this.defense });
 	}
 
 	private setupChrome(): void {
@@ -173,6 +351,7 @@ export class App {
 			if (!confirm("确定清空所有进度吗？")) return;
 			this.progress = {};
 			this.demo = false;
+			this.defense = {};
 			save.clear();
 			this.afterReset();
 			dialog.close();
@@ -186,6 +365,7 @@ export class App {
 		this.quiz = null;
 		this.persist();
 		this.scene.refresh(this.progress, this.now());
+		this.markVillages();
 		this.close();
 		this.render();
 	}
@@ -204,7 +384,8 @@ export class App {
 	}
 
 	// 当前镜头对着哪个年级（每帧调用）
-	tick(): void {
+	tick(dt = 0): void {
+		this.stepBattle(dt);
 		const r = this.scene.radius();
 		const rings = this.k.data.rings;
 		const buttons = $("grades").children;
@@ -220,6 +401,8 @@ export class App {
 			return;
 		}
 		this.quiz = null;
+		this.stopBattle();
+		this.village = null;
 		this.selected = id;
 		this.scene.select(id);
 		if (fly) this.scene.focusPlot(id);
@@ -228,6 +411,8 @@ export class App {
 
 	close(): void {
 		if (this.quiz && !this.quiz.outcome) return;
+		this.stopBattle();
+		this.village = null;
 		this.quiz = null;
 		this.selected = null;
 		this.lastLine = "";
@@ -255,13 +440,14 @@ export class App {
 
 	private renderDialogue(): boolean {
 		const dlg = this.scene.dialogue;
-		if (!dlg || !this.selected) return false;
+		if (!dlg || (!this.selected && this.village === null)) return false;
 		$("panel").hidden = true;
 		this.scene.panelChanged(true);
 		const host = dlg.host();
-		host.innerHTML = this.quiz ? (this.quiz.outcome ? this.resultHtml() : this.quizHtml()) : this.holoTopicHtml();
+		host.innerHTML =
+			this.village !== null ? this.villageHtml() : this.quiz ? (this.quiz.outcome ? this.resultHtml() : this.quizHtml()) : this.holoTopicHtml();
 		this.bindPanel(host);
-		const [line, mood] = this.teacherLine();
+		const [line, mood] = this.village !== null ? this.villageLine() : this.teacherLine();
 		if (line !== this.lastLine) {
 			this.lastLine = line;
 			dlg.say(line, mood);
@@ -452,6 +638,15 @@ export class App {
 			case "next":
 				this.next();
 				break;
+			case "bstart":
+				this.startBattle();
+				break;
+			case "bpause":
+				if (this.fight) {
+					this.fight.paused = !this.fight.paused;
+					this.renderPanel();
+				}
+				break;
 			case "speak":
 				this.speak();
 				break;
@@ -591,6 +786,7 @@ export class App {
 	}
 
 	private key(k: string): void {
+		if (this.fight) return this.battleKey(k);
 		const q = this.quiz;
 		if (!q || q.answered || q.outcome) return;
 		if (k === "确定") {
@@ -629,6 +825,7 @@ export class App {
 			this.persist();
 		}
 		this.scene.refresh(this.progress, now, q.outcome.starsAfter > q.outcome.starsBefore ? q.session.id : undefined);
+		this.markVillages();
 		if (q.outcome.success && q.session.plan.kind !== "practice") this.scene.celebrate(q.session.id);
 		const unlocked = this.k.order.filter((id) => before.get(id) === "locked" && status(this.k, this.progress, id, now) === "open");
 		if (unlocked.length) {
@@ -639,6 +836,8 @@ export class App {
 	}
 
 	private speak(): void {
+		const t = this.fight && battleTarget(this.fight.b);
+		if (t) return say(t.question.prompt);
 		const q = this.quiz;
 		if (!q) return;
 		const s = q.session;
@@ -651,6 +850,19 @@ export class App {
 	private onKey(e: KeyboardEvent): void {
 		if ($<HTMLDialogElement>("settings").open) return;
 		const q = this.quiz;
+		const f = this.fight;
+		if (f && !f.result) {
+			if (/^[0-9./]$/.test(e.key)) this.battleKey(e.key);
+			else if (e.key === "," || e.key === "，") this.battleKey("，");
+			else if (e.key === "Backspace") this.battleKey("⌫");
+			else if (e.key === "Enter") this.battleKey("确定");
+			else if (e.key === "Escape" || e.key === "p") {
+				f.paused = !f.paused;
+				this.renderPanel();
+			}
+			e.preventDefault();
+			return;
+		}
 		if (q && !q.outcome) {
 			const question = q.session.current;
 			if (q.answered) {

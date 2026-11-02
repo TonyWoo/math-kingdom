@@ -176,3 +176,47 @@ function line(x0: number, z0: number, x1: number, z1: number, f: (x: number, z: 
 export function walkable(t: TerrainData, x: number, z: number): boolean {
 	return t.columns.has(t.key(x, z)) && !t.occupied.has(t.key(x, z));
 }
+
+// 保卫战的进攻路线：从村庄外侧的环路（远离王城的一边）走到村庄广场的最短路，每一步最多上下 1 格，
+// 不穿过建筑。blocked 是额外走不过去的格子（王城、树干）。找不到时返回 null。
+export function attackPath(t: TerrainData, village: number, data: KingdomData, blocked?: Set<number>): [number, number][] | null {
+	const v = t.villages[village];
+	const layout = data.villages[village];
+	const ring = data.rings[layout.grade - 1];
+	const a = Math.atan2(layout.y, layout.x);
+	const r = (ring.r2 + 35) / BLOCK;
+	const start: [number, number] = [Math.round(r * Math.cos(a)), Math.round(r * Math.sin(a))];
+	const ok = (x: number, z: number) => walkable(t, x, z) && !blocked?.has(t.key(x, z));
+	if (!ok(...start)) return null;
+	const prev = new Map<number, number>();
+	const goal = t.key(v.x, v.z);
+	const queue: [number, number][] = [start];
+	prev.set(t.key(...start), -1);
+	while (queue.length) {
+		const [x, z] = queue.shift()!;
+		const k = t.key(x, z);
+		if (k === goal) break;
+		const h = t.column(x, z)!.h;
+		for (const [dx, dz] of [
+			[1, 0],
+			[-1, 0],
+			[0, 1],
+			[0, -1],
+		]) {
+			const nx = x + dx;
+			const nz = z + dz;
+			const nk = t.key(nx, nz);
+			if (prev.has(nk) || !ok(nx, nz) || Math.abs(t.column(nx, nz)!.h - h) > 1) continue;
+			// 不要走太远（只在村庄附近找路）
+			if (Math.hypot(nx - v.x, nz - v.z) > 40) continue;
+			prev.set(nk, k);
+			queue.push([nx, nz]);
+		}
+	}
+	if (!prev.has(goal)) return null;
+	const path: [number, number][] = [];
+	for (let k = goal; k !== -1; k = prev.get(k)!) {
+		path.push([Math.floor(k / 8192) - 4096, (k % 8192) - 4096]);
+	}
+	return path.reverse();
+}

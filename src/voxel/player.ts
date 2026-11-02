@@ -28,6 +28,8 @@ export class Player {
 	private el: HTMLElement;
 	private joystick: HTMLElement;
 	enabled = false;
+	// 站在守望台上（保卫战）：固定高度，不受重力
+	lockY: number | null = null;
 	onInteract: (screen?: { x: number; y: number }) => void = () => {};
 	onLockChange: (locked: boolean) => void = () => {};
 
@@ -195,6 +197,14 @@ export class Player {
 				this.vy = JUMP;
 				this.onGround = false;
 			}
+		}
+		if (this.lockY !== null) {
+			this.position.y = this.lockY;
+			this.vy = 0;
+			this.onGround = true;
+			camera.position.set(this.position.x, this.position.y + EYE, this.position.z);
+			camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+			return;
 		}
 		this.vy -= GRAVITY * dt;
 		this.position.y += this.vy * dt;

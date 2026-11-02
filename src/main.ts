@@ -43,7 +43,7 @@ function frame(now: number) {
 	const dt = Math.min(0.05, (now - last) / 1000);
 	last = now;
 	app.view.update(dt);
-	app.tick();
+	app.tick(dt);
 	requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

@@ -1,6 +1,7 @@
 // 界面（app.ts）操作 3D 画面用的接口。地图视角（KingdomScene）和第一人称方块世界（VoxelScene）都实现它，
 // 切换视角时界面不用关心现在是哪一个。
 
+import type { Battle, BattleEvent } from "../core/defense";
 import type { Progress } from "../core/kingdom";
 import type { Mood } from "./teachers";
 
@@ -10,8 +11,18 @@ export interface Dialogue {
 	say(text: string, mood: Mood): void;
 }
 
+// 保卫战（只有第一人称有）：开打时摆好战场，之后每帧按 Battle 的状态画骑士，事件触发特效
+export interface BattleView {
+	start(b: Battle): void;
+	events(ev: BattleEvent[]): void;
+	end(): void;
+}
+
+// 村庄路牌上的旗：none 还不能打，ready 可以保卫（红旗），defended 守住过（金旗）
+export type VillageMark = "none" | "ready" | "defended";
+
 export interface View {
-	// 点到（或第一人称里对着点击）一块地；null 表示点在空地上
+	// 点到（或第一人称里对着点击）一块地；null 表示点在空地上。第一人称里点到村庄路牌时是 "village:序号"
 	onPick: (id: string | null) => void;
 	refresh(progress: Progress, now: number, changed?: string): void;
 	select(id: string | null): void;
@@ -30,4 +41,6 @@ export interface View {
 	update(dt: number): void;
 	// 有的话，详情和答题改成和动物老师对话（只有第一人称有）
 	dialogue?: Dialogue;
+	battle?: BattleView;
+	villages?(marks: VillageMark[]): void;
 }

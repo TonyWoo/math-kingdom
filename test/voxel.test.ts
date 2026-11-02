@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import raw from "../src/data/kingdom.json";
 import type { KingdomData } from "../src/core/types";
-import { BASE, FOOTPRINT, buildTerrain, walkable } from "../src/voxel/terrain";
+import { BASE, FOOTPRINT, attackPath, buildTerrain, walkable } from "../src/voxel/terrain";
 
 const data = raw as KingdomData;
 const t = buildTerrain(data);
@@ -60,5 +60,19 @@ describe("voxel terrain", () => {
 			}
 			expect(reach, p.id).toBe(true);
 		}
+	});
+
+	it("每个村庄都有从外侧环路到广场的进攻路线（保卫战用）", () => {
+		data.villages.forEach((_, i) => {
+			const path = attackPath(t, i, data);
+			expect(path, data.villages[i].name).not.toBeNull();
+			expect(path!.length).toBeGreaterThan(2);
+			for (let j = 1; j < path!.length; j++) {
+				const [x0, z0] = path![j - 1];
+				const [x1, z1] = path![j];
+				expect(Math.abs(x1 - x0) + Math.abs(z1 - z0)).toBe(1);
+				expect(Math.abs(t.column(x1, z1)!.h - t.column(x0, z0)!.h)).toBeLessThanOrEqual(1);
+			}
+		});
 	});
 });
