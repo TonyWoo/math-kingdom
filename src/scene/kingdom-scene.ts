@@ -498,12 +498,9 @@ export class KingdomScene implements View {
 		const hits = this.raycaster.intersectObjects([this.pads, this.plazasMesh, this.towns, ...groups], true);
 		for (const h of hits) {
 			if (h.object === this.pads && h.instanceId !== undefined) return this.k.order[h.instanceId];
-			// 村庄广场：只有插了旗（可以保卫或已守住）的村庄能点开，就是保卫战在地图上的入口
-			if (h.object === this.plazasMesh && h.instanceId !== undefined) {
-				const m = this.lastMarks[h.instanceId];
-				if (m === "ready" || m === "defended") return `village:${h.instanceId}`;
-				continue;
-			}
+			// 村庄广场：任何村庄都能点开面板——能保卫的直接有「开始保卫战」，
+			// 还不能的会列出还差哪几块地到 2 星（只给达标村开面板时，没达标的人永远找不到入口）
+			if (h.object === this.plazasMesh && h.instanceId !== undefined) return `village:${h.instanceId}`;
 			let o: THREE.Object3D | null = h.object;
 			while (o && o.userData.id === undefined && o.userData.village === undefined) o = o.parent;
 			if (o?.userData.village !== undefined) return `village:${o.userData.village as number}`;
