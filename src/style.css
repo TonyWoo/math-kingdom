@@ -55,26 +55,80 @@ body {
 	color: #fff;
 }
 
-.label.plot {
-	font-size: 12px;
-	max-width: 9em;
+/* 名字卡片（scene/label.ts）：限定宽度，长名字折成多行，小尖角指向建筑 */
+.label.card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1px;
+	width: max-content;
+	max-width: 7.5em;
+	padding: 4px 9px 5px;
+	border-radius: 9px;
 	white-space: normal;
 	text-align: center;
-	line-height: 1.2;
+	line-height: 1.25;
+	text-shadow: none;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-.label.plot.locked {
-	color: #e7ebf2;
+.label.card::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	margin-left: -6px;
+	border: 6px solid transparent;
+}
+
+.label.card.down {
+	margin-bottom: 6px;
+}
+
+.label.card.down::after {
+	top: 100%;
+	border-top-color: var(--card-bg);
+}
+
+.label.card.up {
+	margin-top: 6px;
+}
+
+.label.card.up::after {
+	bottom: 100%;
+	border-bottom-color: var(--card-bg);
+}
+
+.label.card .sub {
+	font-size: 0.75em;
+	font-weight: 500;
 	opacity: 0.75;
 }
 
+.label.plot {
+	--card-bg: rgba(255, 251, 238, 0.94);
+	background: var(--card-bg);
+	color: var(--ink);
+	font-size: 12px;
+	border: 1.5px solid #e6cf96;
+}
+
+.label.plot.locked {
+	--card-bg: rgba(226, 231, 239, 0.82);
+	color: #6c7385;
+	border-color: #c9d0dc;
+}
+
 .label.village {
-	font-size: 13px;
-	padding: 2px 10px;
-	border-radius: 999px;
-	background: rgba(110, 70, 30, 0.82);
+	--card-bg: rgba(110, 70, 30, 0.9);
+	background: var(--card-bg);
 	color: #fff4d6;
-	text-shadow: none;
+	font-size: 13px;
+	max-width: 8.5em;
+}
+
+body.fp-mode .label.plot {
+	font-size: 13px;
 }
 
 .label.grade {

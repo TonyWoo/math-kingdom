@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
 import type { KingdomData } from "../core/types";
+import { labelCard } from "../scene/label";
 import type { View } from "../scene/view";
 import { type Atlas, createAtlas } from "./atlas";
 import { type Box, MeshBuilder, block } from "./mesher";
@@ -239,11 +240,10 @@ export class VoxelScene implements View {
 				{ min: [v.x + 0.45, v.h + 1, v.z + 0.45], max: [v.x + 0.55, v.h + 2.4, v.z + 0.55], type: "log" },
 				{ min: [v.x - 0.1, v.h + 1.8, v.z + 0.4], max: [v.x + 1.1, v.h + 2.4, v.z + 0.6], type: "planks" },
 			]);
-			const el = document.createElement("div");
-			el.className = "label village";
-			el.textContent = this.data.villages[v.index].name;
-			const label = new CSS2DObject(el);
-			label.position.set(v.x + 0.5, v.h + 3, v.z + 0.5);
+			const village = this.data.villages[v.index];
+			const label = new CSS2DObject(labelCard("village", village.name, village.unit));
+			label.center.set(0.5, 1); // 卡片底边（小尖角）对着路牌顶上
+			label.position.set(v.x + 0.5, v.h + 2.7, v.z + 0.5);
 			this.scene.add(label);
 			this.villageLabels.push(label);
 		}
@@ -263,10 +263,8 @@ export class VoxelScene implements View {
 			hit.position.set(cell.x + 0.5, cell.h + 3, cell.z + 0.5); // y 从 h 到 h + 6
 			hit.userData.id = id;
 			this.scene.add(hit);
-			const el = document.createElement("div");
-			el.className = "label plot";
-			el.textContent = this.k.topic(id).name;
-			const label = new CSS2DObject(el);
+			const label = new CSS2DObject(labelCard("plot", this.k.topic(id).name));
+			label.center.set(0.5, 1); // 卡片底边对着建筑顶上
 			this.scene.add(label);
 			this.plots.set(id, { cell, index, group, hit, label, grow: 1 });
 		});
@@ -356,7 +354,8 @@ export class VoxelScene implements View {
 				v.group.add(bubble);
 			}
 		}
-		v.label.position.set(v.cell.x + 0.5, v.cell.h + 1 + Math.max(top, 2.2) + 0.5, v.cell.z + 0.5);
+		// 卡片像招牌一样挂在门上方（最高 3.4 格），站在建筑前面也能看到；矮的建筑就挂在屋顶上
+		v.label.position.set(v.cell.x + 0.5, v.cell.h + 1 + Math.min(Math.max(top, 1.5) + 0.3, 3.4), v.cell.z + 0.5);
 	}
 
 	// 像素风的提示气泡（? 该复习，! 被占领）

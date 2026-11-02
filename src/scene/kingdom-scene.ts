@@ -7,6 +7,7 @@ import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
 import type { KingdomData } from "../core/types";
 import type { Assets } from "./assets";
+import { labelCard } from "./label";
 import type { View } from "./view";
 import { createBubble, createBuilding, createGoblin, createOpenMarker, createWeeds, geo, mat } from "./buildings";
 import { BASE_H, COLORS, SCALE, createWorld, terraceHeight } from "./world";
@@ -206,10 +207,8 @@ export class KingdomScene implements View {
 			group.position.set(pos.x, pos.y + 0.06, pos.z);
 			group.userData.id = id;
 			this.scene.add(group);
-			const el = document.createElement("div");
-			el.className = "label plot";
-			el.textContent = this.k.topic(id).name;
-			const label = new CSS2DObject(el);
+			// 名字卡片挂在地块下方，小尖角朝上指着它
+			const label = new CSS2DObject(labelCard("plot", this.k.topic(id).name, undefined, "up"));
 			label.position.set(pos.x, pos.y - 0.05, pos.z + 0.45);
 			label.center.set(0.5, 0);
 			this.scene.add(label);
@@ -254,10 +253,8 @@ export class KingdomScene implements View {
 
 	private addLabels(): void {
 		this.data.villages.forEach((v) => {
-			const el = document.createElement("div");
-			el.className = "label village";
-			el.textContent = v.name;
-			const label = new CSS2DObject(el);
+			const label = new CSS2DObject(labelCard("village", v.name, v.unit));
+			label.center.set(0.5, 1);
 			// 名牌放在村庄外侧（远离王城的一边）
 			const ring = this.data.rings[v.grade - 1];
 			const a = Math.atan2(v.y, v.x);
