@@ -47,6 +47,14 @@ export const BLOCKS = {
 	window_cream: { top: "cream", side: "window", bottom: "cream" },
 	castle_floor: { top: "castle_top", side: "cobble", bottom: "cobble" },
 	flower: { top: "flower", side: "grass_side", bottom: "dirt" },
+	fur_brown: same("fur_brown"),
+	fur_cream: same("fur_cream"),
+	fur_orange: same("fur_orange"),
+	fur_white: same("fur_white"),
+	fur_black: same("fur_black"),
+	fur_pink: same("fur_pink"),
+	eye: same("eye"),
+	beak: same("beak"),
 } satisfies Record<string, BlockDef>;
 
 export type BlockType = keyof typeof BLOCKS;

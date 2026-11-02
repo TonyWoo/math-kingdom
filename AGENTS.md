@@ -8,7 +8,8 @@
 | --- | --- |
 | `src/core/` | 纯逻辑，不依赖 three.js 和 DOM：`kingdom.ts`（先修索引、地块状态、演示进度）、`quiz.ts`（建造三步、复习、出题、更新进度）、`judge.ts`（判题）、`variant.ts`（变式题：按 verify 算式换数字，规则见文件开头，`test/variant.test.ts` 对整个题库生成变式检查）、`save.ts`（存档）、`types.ts` |
 | `src/scene/` | three.js：`assets.ts`（加载 `public/art/` 的模型和精灵，静态网格合并、动画零件单独保留，共用一个 palette 材质）、`world.ts`（岛、台地、王城、森林）、`buildings.ts`（建筑和装饰：有资源用模型，没有就用基本几何体拼，静态零件用 `bake` 合并）、`kingdom-scene.ts`（地块、迷雾、标签、拾取、镜头、动画） |
-| `src/scene/view.ts` | 两种视角共用的 `View` 接口；界面只通过它操作 3D 画面 |
+| `src/scene/view.ts` | 两种视角共用的 `View` 接口；界面只通过它操作 3D 画面。有 `dialogue` 的视角（第一人称）把面板内容画在全息面板里、台词交给老师说 |
+| `src/scene/teachers.ts`、`src/ui/speech.ts` | 四位动物老师（按领域）和表情；朗读（语音合成） |
 | `src/voxel/` | 第一人称方块世界：`terrain.ts`（纯逻辑：布局换算成方块网格、高度、地块和小路，`test/voxel.test.ts` 测可走性）、`atlas.ts`（代码画的像素贴图集）、`mesher.ts`（方块拼网格、方块种类）、`structures.ts`（建筑、王城、树、哥布林的方块图纸）、`player.ts`（第一人称移动和碰撞，键鼠和触摸）、`voxel-scene.ts`（场景，实现 `View`） |
 | `src/ui/app.ts` | HTML 界面：顶栏、年级按钮、详情面板、答题键盘、朗读、设置；持有进度，`setView` 切换视角 |
 | `src/data/kingdom.json` | 生成文件（`npm run import`），不要手改 |

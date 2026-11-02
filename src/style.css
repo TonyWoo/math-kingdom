@@ -921,3 +921,303 @@ body.fp-mode .legend {
 	color: #2a6fb8;
 	font-size: 12px;
 }
+
+/* 第一人称的对话模式：动物老师的对话气泡 + 浮在空中的全息面板（voxel-scene.ts，内容由 app.ts 画） */
+.in-dialogue .crosshair,
+.in-dialogue .fp-hint,
+.in-dialogue .fp-help {
+	display: none;
+}
+
+.holo-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+}
+
+/* 对话时别的名字卡片调淡，免得抢眼 */
+.in-dialogue .labels .label.card {
+	opacity: 0.35;
+}
+
+.holo-layer * {
+	pointer-events: none;
+}
+
+.holo {
+	--holo: #5ff3ff;
+	width: 460px;
+	padding: 0 0 18px;
+	border: 2px solid rgba(95, 243, 255, 0.85);
+	border-radius: 18px;
+	background:
+		repeating-linear-gradient(0deg, rgba(95, 243, 255, 0.06) 0 2px, transparent 2px 5px),
+		linear-gradient(160deg, rgba(20, 60, 110, 0.82), rgba(10, 24, 60, 0.88));
+	box-shadow:
+		0 0 24px rgba(95, 243, 255, 0.55),
+		inset 0 0 30px rgba(95, 243, 255, 0.18);
+	color: #e6fdff;
+	font-size: 17px;
+	user-select: none;
+	animation: holo-in 0.35s ease-out;
+}
+
+.holo,
+.holo * {
+	pointer-events: auto;
+}
+
+/* 只改透明度：transform 由 CSS3D 渲染器每帧写入，动画里改 transform 会让面板跳到别处 */
+@keyframes holo-in {
+	from {
+		opacity: 0;
+	}
+}
+
+.holo.portrait {
+	width: 380px;
+	font-size: 16px;
+}
+
+.holo-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 14px;
+	border-bottom: 1px solid rgba(95, 243, 255, 0.4);
+	color: var(--holo);
+	font-size: 13px;
+	letter-spacing: 2px;
+	text-shadow: 0 0 6px rgba(95, 243, 255, 0.8);
+}
+
+.holo-voice {
+	border: 1px solid rgba(95, 243, 255, 0.6);
+	border-radius: 8px;
+	background: transparent;
+	color: inherit;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+.holo-body {
+	position: relative;
+	padding: 12px 18px 0;
+}
+
+.holo-body h2 {
+	margin: 0 36px 8px 0;
+	font-size: 24px;
+	color: #fff;
+	text-shadow: 0 0 10px rgba(95, 243, 255, 0.8);
+}
+
+.holo-body h3 {
+	margin: 14px 0 6px;
+	color: var(--holo);
+	font-size: 15px;
+}
+
+.holo-body .close {
+	position: absolute;
+	top: 10px;
+	right: 12px;
+	width: 34px;
+	height: 34px;
+	border: 1px solid rgba(95, 243, 255, 0.7);
+	border-radius: 50%;
+	background: rgba(95, 243, 255, 0.12);
+	color: #fff;
+	font-size: 20px;
+	cursor: pointer;
+}
+
+.holo-body .chip {
+	background: rgba(95, 243, 255, 0.15);
+	color: #bff8ff;
+}
+
+.holo-body .muted,
+.holo-body .hint,
+.holo-body .quiz .step {
+	color: #9fd8e6;
+}
+
+.holo-body .stars .ic {
+	filter: drop-shadow(0 0 4px rgba(255, 220, 80, 0.8));
+}
+
+/* 发光按钮 */
+.holo-body .btn,
+.holo-body .keypad .btn,
+.holo-body .choices .btn,
+.holo-body .prereq {
+	background: rgba(95, 243, 255, 0.1);
+	color: #eaffff;
+	border: 1.5px solid rgba(95, 243, 255, 0.75);
+	box-shadow:
+		0 0 10px rgba(95, 243, 255, 0.35),
+		inset 0 0 8px rgba(95, 243, 255, 0.15);
+	text-shadow: 0 0 4px rgba(95, 243, 255, 0.6);
+	transition:
+		background 0.12s,
+		box-shadow 0.12s,
+		transform 0.08s;
+}
+
+.holo-body .btn:hover,
+.holo-body .prereq:hover {
+	background: rgba(95, 243, 255, 0.28);
+	box-shadow: 0 0 18px rgba(95, 243, 255, 0.8);
+}
+
+.holo-body .btn:active {
+	transform: scale(0.96);
+}
+
+.holo-body .btn.primary,
+.holo-body .keypad .btn.ok {
+	border-color: #7dffb0;
+	background: rgba(125, 255, 176, 0.18);
+	box-shadow: 0 0 14px rgba(125, 255, 176, 0.55);
+}
+
+.holo-body .btn.warm {
+	border-color: #ffd36a;
+	background: rgba(255, 211, 106, 0.18);
+	box-shadow: 0 0 14px rgba(255, 211, 106, 0.55);
+	color: #fff6dc;
+}
+
+.holo-body .btn.ghost {
+	margin-top: 10px;
+	border-color: rgba(160, 190, 220, 0.6);
+	box-shadow: none;
+}
+
+.holo-body .choices .btn b {
+	color: var(--holo);
+}
+
+.holo-body .choices .btn.right,
+.holo-body .entry.right {
+	border-color: #7dffb0;
+	background: rgba(125, 255, 176, 0.25);
+	box-shadow: 0 0 16px rgba(125, 255, 176, 0.8);
+}
+
+.holo-body .choices .btn.wrong,
+.holo-body .entry.wrong {
+	border-color: #ff8a8a;
+	background: rgba(255, 120, 120, 0.22);
+	box-shadow: 0 0 16px rgba(255, 120, 120, 0.7);
+}
+
+.holo-body .prompt {
+	background: rgba(4, 16, 40, 0.6);
+	box-shadow: inset 0 0 0 1px rgba(95, 243, 255, 0.45);
+	color: #fff;
+	font-size: 20px;
+}
+
+.holo-body .speak {
+	background: rgba(95, 243, 255, 0.18);
+}
+
+.holo-body .entry {
+	background: rgba(4, 16, 40, 0.6);
+	box-shadow: inset 0 0 0 2px var(--holo);
+	color: #fff;
+	text-shadow: 0 0 8px rgba(95, 243, 255, 0.8);
+}
+
+.holo-body .entry .placeholder {
+	color: #6fb6c6;
+}
+
+.holo-body .keypad .btn {
+	min-height: 50px;
+	font-size: 22px;
+}
+
+.holo-body .keypad .btn.fn {
+	color: var(--holo);
+}
+
+.holo-body .feedback.right {
+	background: rgba(125, 255, 176, 0.15);
+	color: #c9ffe0;
+}
+
+.holo-body .feedback.wrong {
+	background: rgba(255, 190, 110, 0.15);
+	color: #ffe6c2;
+}
+
+.holo-body .dots span {
+	background: rgba(95, 243, 255, 0.25);
+}
+
+.holo-body .result h2 {
+	margin-right: 0;
+}
+
+.holo-body .prereq .tag {
+	background: rgba(255, 190, 110, 0.85);
+}
+
+/* 动物老师的对话气泡 */
+.label.speech {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: max-content;
+	max-width: 17em;
+	margin-bottom: 10px;
+	padding: 10px 14px 12px;
+	border-radius: 16px;
+	background: rgba(255, 253, 246, 0.97);
+	color: var(--ink);
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 1.45;
+	white-space: normal;
+	text-shadow: none;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+	animation: speech-in 0.25s ease-out;
+}
+
+.label.speech::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 100%;
+	margin-left: -9px;
+	border: 9px solid transparent;
+	border-top-color: rgba(255, 253, 246, 0.97);
+}
+
+.label.speech b {
+	color: #c07a12;
+	font-size: 13px;
+}
+
+.label.speech:empty {
+	display: none;
+}
+
+@keyframes speech-in {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (max-width: 760px) {
+	.label.speech {
+		max-width: 17em;
+		padding: 8px 12px 10px;
+		font-size: 14px;
+		line-height: 1.4;
+	}
+}

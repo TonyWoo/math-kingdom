@@ -5,13 +5,16 @@
 
 import * as THREE from "three";
 import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
+import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
 import type { KingdomData } from "../core/types";
 import { labelCard } from "../scene/label";
-import type { View } from "../scene/view";
+import { type Mood, TEACHERS } from "../scene/teachers";
+import type { Dialogue, View } from "../scene/view";
+import { speak, stopSpeaking } from "../ui/speech";
 import { type Atlas, createAtlas } from "./atlas";
 import { type Box, MeshBuilder, block } from "./mesher";
-import { type Part, type Structure, buildingStructure, castleStructure, goblinStructure, openStructure, treeBoxes, weedsStructure } from "./structures";
+import { type Part, type Structure, buildingStructure, castleStructure, goblinStructure, openStructure, teacherBoxes, treeBoxes, weedsStructure } from "./structures";
 import { BASE, BLOCK, type Ground, type PlotCell, type TerrainData, buildTerrain } from "./terrain";
 import { Player } from "./player";
 
@@ -81,6 +84,23 @@ export class VoxelScene implements View {
 	private hint: HTMLElement;
 	private help: HTMLElement;
 	private hover: string | null = null;
+
+	// ---- 对话模式：动物老师 + 浮在空中的全息面板（CSS3D，HTML 按钮直接点） ----
+	private css3d = new CSS3DRenderer();
+	private holo: CSS3DObject;
+	private holoBody: HTMLElement;
+	private holoName: HTMLElement;
+	private teacher: THREE.Group | null = null;
+	private teacherMeshes = new Map<string, THREE.BufferGeometry>();
+	private speech: CSS2DObject;
+	private mood: { mood: Mood; t: number } = { mood: "talk", t: 0 };
+	private talking = false;
+	private selectedId: string | null = null;
+	private voice = true;
+	readonly dialogue: Dialogue = {
+		host: () => this.holoBody,
+		say: (text, mood) => this.say(text, mood),
+	};
 	private raycaster = new THREE.Raycaster();
 	private bursts: { points: THREE.Points; v: Float32Array; age: number }[] = [];
 	private clock = 0;
@@ -98,6 +118,36 @@ export class VoxelScene implements View {
 		container.appendChild(this.renderer.domElement);
 		this.labels.domElement.className = "labels";
 		container.appendChild(this.labels.domElement);
+		this.css3d.domElement.className = "holo-layer";
+		container.appendChild(this.css3d.domElement);
+		const holo = document.createElement("div");
+		holo.className = "holo";
+		holo.innerHTML = '<div class="holo-bar"><span class="holo-name"></span><button class="holo-voice" title="老师说话的声音">🔊</button></div><div class="holo-body"></div>';
+		this.holoBody = holo.querySelector(".holo-body")!;
+		this.holoName = holo.querySelector(".holo-name")!;
+		try {
+			this.voice = localStorage.getItem("math-kingdom/voice") !== "off";
+		} catch {
+			// 读不到就用默认（开）
+		}
+		const voiceBtn = holo.querySelector<HTMLButtonElement>(".holo-voice")!;
+		const showVoice = () => (voiceBtn.textContent = this.voice ? "🔊" : "🔇");
+		showVoice();
+		voiceBtn.onclick = () => {
+			this.voice = !this.voice;
+			showVoice();
+			if (!this.voice) stopSpeaking();
+			try {
+				localStorage.setItem("math-kingdom/voice", this.voice ? "on" : "off");
+			} catch {
+				// 存不了就只在这次有效
+			}
+		};
+		this.holo = new CSS3DObject(holo);
+		const bubbleEl = document.createElement("div");
+		bubbleEl.className = "label speech";
+		this.speech = new CSS2DObject(bubbleEl);
+		this.speech.center.set(0.5, 1);
 
 		this.scene.background = new THREE.Color(SKY);
 		this.scene.fog = new THREE.Fog(SKY, 40, 120);
@@ -393,6 +443,13 @@ export class VoxelScene implements View {
 	}
 
 	select(id: string | null): void {
+		// 对话中跳到另一块地（点了先修）：老师跟着换地方
+		const restart = this.teacher !== null && id !== this.selectedId;
+		this.selectedId = id;
+		if (restart) {
+			this.endDialogue();
+			if (id) this.startDialogue();
+		}
 		this.highlight.visible = !!id;
 		if (!id) return;
 		const v = this.plots.get(id)!;
@@ -489,6 +546,8 @@ export class VoxelScene implements View {
 	}
 
 	panelChanged(open: boolean): void {
+		if (open && !this.teacher && this.selectedId && this.visible) this.startDialogue();
+		if (!open) this.endDialogue();
 		this.panelOpen = open;
 		// 面板打开时玩家不动（键盘留给答题），鼠标释放出来点按钮
 		this.player.enabled = this.visible && !open;
@@ -500,7 +559,10 @@ export class VoxelScene implements View {
 		this.visible = visible;
 		this.player.enabled = visible && !this.panelOpen;
 		this.container.style.display = visible ? "" : "none";
-		if (!visible) this.player.unlock();
+		if (!visible) {
+			this.player.unlock();
+			this.endDialogue();
+		}
 		else this.resize();
 	}
 
@@ -531,6 +593,7 @@ export class VoxelScene implements View {
 		const h = this.container.clientHeight || window.innerHeight;
 		this.renderer.setSize(w, h);
 		this.labels.setSize(w, h);
+		this.css3d.setSize(w, h);
 		this.camera.aspect = w / h;
 		if (this.inset.right || this.inset.bottom) this.camera.setViewOffset(w, h, this.inset.right / 2, this.inset.bottom / 2, w, h);
 		else this.camera.clearViewOffset();
@@ -594,7 +657,134 @@ export class VoxelScene implements View {
 			return true;
 		});
 
+		this.animateTeacher(dt);
 		this.renderer.render(this.scene, this.camera);
 		this.labels.render(this.scene, this.camera);
+		if (this.teacher) this.css3d.render(this.scene, this.camera);
+	}
+
+	// 对话开始：老师站在玩家面前偏左的地上，全息面板浮在偏右（竖屏时在下方），都朝着玩家
+	private startDialogue(): void {
+		const id = this.selectedId!;
+		const topic = this.k.topic(id);
+		const t = TEACHERS[topic.domain];
+		this.holoName.textContent = `${t.name}的全息面板`;
+		const yaw = this.player.yaw;
+		this.player.pitch = -0.06;
+		this.player.update(0, this.camera);
+		const f = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+		const r = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+		const eye = this.camera.position.clone();
+		const portrait = this.camera.aspect < 1;
+
+		let geo = this.teacherMeshes.get(t.animal);
+		if (!geo) {
+			const b = new MeshBuilder(this.atlas);
+			b.boxes(teacherBoxes(t.animal));
+			geo = b.build();
+			this.teacherMeshes.set(t.animal, geo);
+		}
+		const group = new THREE.Group();
+		const body = new THREE.Mesh(geo, this.material);
+		group.add(body);
+		// 老师站的地方：左前方的空地（不能在建筑、树、王城里面）；电脑上找不到就换到右边
+		let spot = eye.clone().add(f.clone().multiplyScalar(portrait ? 3.4 : 3.1)).add(r.clone().multiplyScalar(portrait ? -0.3 : -1.05));
+		let ground = this.player.position.y;
+		if (!portrait) {
+			search: for (const side of [-1, 1]) {
+				for (const d of [3.1, 2.6, 3.6, 2.2]) {
+					for (const lateral of [1.05, 0.8, 1.35]) {
+						const p = eye.clone().add(f.clone().multiplyScalar(d)).add(r.clone().multiplyScalar(side * lateral));
+						const top = this.topAt(Math.floor(p.x), Math.floor(p.z));
+						if (Number.isFinite(top) && Math.abs(top - this.player.position.y) <= 1) {
+							spot = p;
+							ground = top;
+							break search;
+						}
+					}
+				}
+			}
+		} else {
+			// 竖屏时面板占下半屏，老师站在一朵小云上浮在面板上方
+			ground = eye.y - 0.7;
+		}
+		if (portrait) {
+			const b = new MeshBuilder(this.atlas);
+			b.box({ min: [-0.5, -0.28, -0.4], max: [0.5, 0, 0.4], type: "cloud" });
+			b.box({ min: [-0.3, -0.36, -0.25], max: [0.35, -0.2, 0.3], type: "cloud" });
+			group.add(new THREE.Mesh(b.build(), this.material));
+		}
+		group.position.set(spot.x, ground, spot.z);
+		group.rotation.y = yaw + (portrait ? 0.15 : 0.35);
+		group.scale.setScalar(0.95);
+		group.userData.baseY = ground;
+		this.scene.add(group);
+		this.teacher = group;
+		this.speech.position.set(0, 1.55, 0);
+		group.add(this.speech);
+
+		// 全息面板：1 像素 = PX 格
+		const px = portrait ? 0.0024 : 0.0027;
+		const panelPos = portrait
+			? eye.clone().add(f.clone().multiplyScalar(1.75)).add(new THREE.Vector3(0, -0.6, 0))
+			: eye.clone().add(f.clone().multiplyScalar(2.0)).add(r.clone().multiplyScalar(0.6)).add(new THREE.Vector3(0, -0.1, 0));
+		this.holo.position.copy(panelPos);
+		this.holo.rotation.set(0, yaw + (portrait ? 0 : -0.28), 0);
+		this.holo.scale.setScalar(px);
+		this.holo.element.classList.toggle("portrait", portrait);
+		this.scene.add(this.holo);
+		this.container.classList.add("in-dialogue");
+		this.highlight.visible = false;
+		this.mood = { mood: "talk", t: 0 };
+	}
+
+	private endDialogue(): void {
+		if (!this.teacher) return;
+		this.teacher.remove(this.speech);
+		this.scene.remove(this.teacher);
+		this.scene.remove(this.holo);
+		this.teacher = null;
+		this.talking = false;
+		stopSpeaking();
+		this.container.classList.remove("in-dialogue");
+		this.highlight.visible = !!this.selectedId;
+	}
+
+	private say(text: string, mood: Mood): void {
+		const el = this.speech.element;
+		el.innerHTML = "";
+		const who = document.createElement("b");
+		who.textContent = this.selectedId ? TEACHERS[this.k.topic(this.selectedId).domain].name : "";
+		const line = document.createElement("span");
+		line.textContent = text;
+		el.append(who, line);
+		this.mood = { mood, t: 0 };
+		this.talking = true;
+		if (this.voice) speak(text);
+	}
+
+	// 老师的动作：说话时轻轻点头，答对跳一下，答错歪头，通关转一圈跳两下
+	private animateTeacher(dt: number): void {
+		const g = this.teacher;
+		if (!g) return;
+		const m = this.mood;
+		m.t += dt;
+		const body = g.children[0];
+		const base = g.userData.baseY as number;
+		body.rotation.set(0, 0, 0);
+		body.position.set(0, 0, 0);
+		if (m.mood === "happy" && m.t < 1) {
+			body.position.y = Math.abs(Math.sin(m.t * Math.PI * 2)) * 0.35;
+		} else if (m.mood === "cheer" && m.t < 1.6) {
+			body.position.y = Math.abs(Math.sin(m.t * Math.PI * 2.5)) * 0.45;
+			body.rotation.y = Math.min(1, m.t / 0.8) * Math.PI * 2;
+		} else if (m.mood === "sad" && m.t < 2.5) {
+			body.rotation.z = Math.sin(Math.min(1, m.t * 3) * Math.PI * 0.5) * 0.22;
+		} else if (this.talking && m.t < 3) {
+			body.rotation.x = Math.sin(m.t * 9) * 0.05;
+		} else {
+			body.position.y = Math.sin(this.clock * 2) * 0.02; // 站着轻轻呼吸
+		}
+		g.position.y = base;
 	}
 }

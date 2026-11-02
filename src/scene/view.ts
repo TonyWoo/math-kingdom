@@ -2,6 +2,13 @@
 // 切换视角时界面不用关心现在是哪一个。
 
 import type { Progress } from "../core/kingdom";
+import type { Mood } from "./teachers";
+
+// 对话模式（第一人称）：面板内容画在视角提供的全息面板里，老师用对话气泡说出台词
+export interface Dialogue {
+	host(): HTMLElement;
+	say(text: string, mood: Mood): void;
+}
 
 export interface View {
 	// 点到（或第一人称里对着点击）一块地；null 表示点在空地上
@@ -21,4 +28,6 @@ export interface View {
 	panelChanged(open: boolean): void;
 	show(visible: boolean): void;
 	update(dt: number): void;
+	// 有的话，详情和答题改成和动物老师对话（只有第一人称有）
+	dialogue?: Dialogue;
 }

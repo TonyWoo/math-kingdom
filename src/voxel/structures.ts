@@ -3,6 +3,7 @@
 // 会动的零件（风车叶片、旗子、光圈、哥布林）单独返回，场景每帧转动或晃动。
 
 import type { Building } from "../core/types";
+import type { Animal } from "../scene/teachers";
 import { type BlockType, type Box, block } from "./mesher";
 
 export interface Part {
@@ -228,4 +229,104 @@ export function castleStructure(y: number): { boxes: Box[]; solid: [number, numb
 		b.push(block(tx, y + 9, tz, "roof_blue"), block(tx, y + 10, tz, "gold"));
 	}
 	return { boxes: b, solid };
+}
+
+// ---- 动物老师（第一人称对话用）：原点在脚底中心，正面朝 +Z，高约 1.1 格，戴一顶学士帽 ----
+
+function cap(b: Box[], y: number, w: number): void {
+	b.push(box(-w / 2, y, -w / 2, w / 2, y + 0.08, w / 2, "dark"));
+	b.push(box(-0.16, y - 0.12, -0.16, 0.16, y, 0.16, "dark"));
+	b.push(box(w / 2 - 0.05, y - 0.25, -0.03, w / 2, y + 0.04, 0.03, "gold"));
+}
+
+function eyes(b: Box[], y: number, z: number, gap: number, size = 0.16): void {
+	b.push(box(-gap - size / 2, y, z, -gap + size / 2, y + size, z + 0.02, "eye"));
+	b.push(box(gap - size / 2, y, z, gap + size / 2, y + size, z + 0.02, "eye"));
+}
+
+const ANIMALS: Record<Animal, () => Box[]> = {
+	// 猫头鹰：圆滚滚的棕色身体、米色肚子、大眼睛、小黄嘴、耳羽
+	owl: () => {
+		const b: Box[] = [
+			box(-0.12, 0, -0.05, -0.02, 0.08, 0.12, "beak"),
+			box(0.02, 0, -0.05, 0.12, 0.08, 0.12, "beak"),
+			box(-0.32, 0.08, -0.26, 0.32, 0.72, 0.26, "fur_brown"),
+			box(-0.22, 0.14, 0.26, 0.22, 0.6, 0.29, "fur_cream"),
+			box(-0.36, 0.2, -0.18, -0.32, 0.6, 0.18, "fur_brown"),
+			box(0.32, 0.2, -0.18, 0.36, 0.6, 0.18, "fur_brown"),
+			box(-0.3, 0.72, -0.24, 0.3, 1.08, 0.24, "fur_brown"),
+			box(-0.26, 0.76, 0.24, 0.26, 1.02, 0.26, "fur_cream"),
+			box(-0.05, 0.78, 0.26, 0.05, 0.86, 0.33, "beak"),
+			box(-0.3, 1.08, -0.08, -0.18, 1.2, 0.04, "fur_brown"),
+			box(0.18, 1.08, -0.08, 0.3, 1.2, 0.04, "fur_brown"),
+		];
+		eyes(b, 0.86, 0.26, 0.12, 0.17);
+		cap(b, 1.1, 0.5);
+		return b;
+	},
+	// 狐狸：橙色身体、白色胸口和尾巴尖、尖耳朵、尖嘴
+	fox: () => {
+		const b: Box[] = [
+			box(-0.2, 0, -0.08, -0.06, 0.3, 0.08, "fur_black"),
+			box(0.06, 0, -0.08, 0.2, 0.3, 0.08, "fur_black"),
+			box(-0.25, 0.3, -0.18, 0.25, 0.72, 0.18, "fur_orange"),
+			box(-0.15, 0.34, 0.18, 0.15, 0.66, 0.2, "fur_white"),
+			box(-0.12, 0.35, -0.5, 0.12, 0.55, -0.18, "fur_orange"),
+			box(-0.1, 0.37, -0.62, 0.1, 0.53, -0.5, "fur_white"),
+			box(-0.27, 0.72, -0.22, 0.27, 1.05, 0.2, "fur_orange"),
+			box(-0.12, 0.74, 0.2, 0.12, 0.88, 0.36, "fur_white"),
+			box(-0.04, 0.84, 0.36, 0.04, 0.9, 0.39, "fur_black"),
+			box(-0.27, 1.05, -0.06, -0.13, 1.25, 0.06, "fur_orange"),
+			box(0.13, 1.05, -0.06, 0.27, 1.25, 0.06, "fur_orange"),
+			box(-0.24, 1.15, -0.03, -0.16, 1.24, 0.07, "fur_black"),
+			box(0.16, 1.15, -0.03, 0.24, 1.24, 0.07, "fur_black"),
+		];
+		eyes(b, 0.9, 0.2, 0.13, 0.12);
+		cap(b, 1.05, 0.46);
+		return b;
+	},
+	// 兔子：白色身体、长耳朵（粉色内侧）、粉鼻子、圆尾巴
+	rabbit: () => {
+		const b: Box[] = [
+			box(-0.2, 0, -0.05, -0.04, 0.12, 0.2, "fur_white"),
+			box(0.04, 0, -0.05, 0.2, 0.12, 0.2, "fur_white"),
+			box(-0.24, 0.12, -0.2, 0.24, 0.62, 0.2, "fur_white"),
+			box(-0.1, 0.3, -0.3, 0.1, 0.5, -0.2, "fur_white"),
+			box(-0.24, 0.62, -0.2, 0.24, 0.98, 0.2, "fur_white"),
+			box(-0.04, 0.72, 0.2, 0.04, 0.78, 0.22, "fur_pink"),
+			box(-0.2, 0.98, -0.05, -0.08, 1.45, 0.05, "fur_white"),
+			box(0.08, 0.98, -0.05, 0.2, 1.45, 0.05, "fur_white"),
+			box(-0.17, 1.02, 0.05, -0.11, 1.4, 0.06, "fur_pink"),
+			box(0.11, 1.02, 0.05, 0.17, 1.4, 0.06, "fur_pink"),
+			box(-0.2, 0.68, 0.2, -0.12, 0.72, 0.21, "fur_pink"),
+			box(0.12, 0.68, 0.2, 0.2, 0.72, 0.21, "fur_pink"),
+		];
+		eyes(b, 0.78, 0.2, 0.1, 0.12);
+		cap(b, 0.98, 0.44);
+		return b;
+	},
+	// 熊猫：白色身体、黑色四肢和耳朵、黑眼圈
+	panda: () => {
+		const b: Box[] = [
+			box(-0.26, 0, -0.12, -0.08, 0.28, 0.12, "fur_black"),
+			box(0.08, 0, -0.12, 0.26, 0.28, 0.12, "fur_black"),
+			box(-0.3, 0.28, -0.22, 0.3, 0.72, 0.22, "fur_white"),
+			box(-0.3, 0.5, -0.22, 0.3, 0.64, 0.23, "fur_black"),
+			box(-0.4, 0.36, -0.1, -0.3, 0.66, 0.1, "fur_black"),
+			box(0.3, 0.36, -0.1, 0.4, 0.66, 0.1, "fur_black"),
+			box(-0.3, 0.72, -0.24, 0.3, 1.12, 0.24, "fur_white"),
+			box(-0.3, 1.1, -0.06, -0.16, 1.22, 0.06, "fur_black"),
+			box(0.16, 1.1, -0.06, 0.3, 1.22, 0.06, "fur_black"),
+			box(-0.22, 0.86, 0.24, -0.04, 1.0, 0.25, "fur_black"),
+			box(0.04, 0.86, 0.24, 0.22, 1.0, 0.25, "fur_black"),
+			box(-0.04, 0.8, 0.24, 0.04, 0.85, 0.27, "fur_black"),
+		];
+		eyes(b, 0.89, 0.25, 0.12, 0.09);
+		cap(b, 1.12, 0.5);
+		return b;
+	},
+};
+
+export function teacherBoxes(animal: Animal): Box[] {
+	return ANIMALS[animal]();
 }

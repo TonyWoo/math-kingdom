@@ -16,6 +16,7 @@
 
 - **地图视角**（默认）：从空中俯看整座岛，拖动平移、缩放，点地块看详情。
 - **第一人称**（顶栏的「第一人称」按钮，或网址加 `?view=fp`）：整个王国变成方块世界，可以走进去。电脑上点一下画面锁定鼠标，WASD 移动、鼠标看、空格跳、Shift 跑，准星对着地块点击或按 E 打开详情，Esc 释放鼠标；手机上左半屏拖动走路、右半屏拖动转头，轻点地块打开详情。方块贴图都是代码生成的原创像素图。
+  - **和动物老师对话答题**：在第一人称里打开一块地，这个领域的动物老师（数与代数是猫头鹰、图形与几何是狐狸、统计与概率是兔子、综合与实践是熊猫）会出现在你面前，用对话气泡打招呼、读题、讲解，会说出声音（全息面板右上角可以关掉）。答案在浮在空中的全息面板上选：点选项或数字键盘，键盘也能直接输入。答对老师会跳起来，答错会歪着头给你讲。
 
 两种视角共用同一份进度，随时可以切换。
 
@@ -73,7 +74,9 @@ steps (foundation, house, golden roof on a later day); buildings ask for review 
 get a goblin when neglected. Stars are never taken away. Reviews rotate through a plot's questions and, where it is safe,
 swap in new numbers (the answer is recomputed from the question bank's own arithmetic formula). Besides the overhead map there is a first-person mode
 (`?view=fp` or the 第一人称 button) where the kingdom becomes a walkable block world with original, code-generated pixel
-textures: WASD and mouse on desktop, a touch joystick on phones. Built with Vite, TypeScript and three.js; progress is stored in
+textures: WASD and mouse on desktop, a touch joystick on phones. In first person a plot's questions come as a
+conversation with an animal teacher (owl, fox, rabbit or panda by domain) who speaks the lines aloud, and answers are
+picked on a holographic panel floating in the air. Built with Vite, TypeScript and three.js; progress is stored in
 the browser.
 
 ```bash

@@ -12,7 +12,9 @@ import { answerCount } from "../core/judge";
 import { type Outcome, type Plan, QuizSession, planFor } from "../core/quiz";
 import * as save from "../core/save";
 import type { Question } from "../core/types";
+import { type Mood, TEACHERS } from "../scene/teachers";
 import type { View } from "../scene/view";
+import { speak as say, stopSpeaking } from "./speech";
 
 const GRADE_NAME = ["一年级", "二年级", "三年级", "四年级", "五年级", "六年级"];
 const BUILDING_NAME = { mill: "磨坊", library: "图书馆", watchtower: "瞭望塔", market: "集市", plaza: "广场" };
@@ -107,7 +109,13 @@ export class App {
 		view.show(true);
 		view.select(this.selected);
 		if (this.selected) view.focusPlot(this.selected, true);
-		view.panelChanged(!$("panel").hidden);
+		this.lastLine = "";
+		if (this.selected) {
+			this.renderPanel();
+		} else {
+			$("panel").hidden = true;
+			view.panelChanged(false);
+		}
 		this.updateInset();
 	}
 
@@ -222,8 +230,10 @@ export class App {
 		if (this.quiz && !this.quiz.outcome) return;
 		this.quiz = null;
 		this.selected = null;
+		this.lastLine = "";
 		this.scene.select(null);
 		$("panel").hidden = true;
+		if (this.scene.dialogue) stopSpeaking();
 		this.scene.panelChanged(false);
 		this.updateInset();
 	}
@@ -231,7 +241,7 @@ export class App {
 	// 面板打开时让 3D 画面的中心避开它
 	private updateInset(): void {
 		const panel = $("panel");
-		if (panel.hidden) {
+		if (panel.hidden || this.scene.dialogue) {
 			this.scene.setInset(0, 0);
 		} else if (window.innerWidth > 760) {
 			this.scene.setInset(panel.offsetWidth + 12, 0);
@@ -240,7 +250,111 @@ export class App {
 		}
 	}
 
+	// 对话模式（第一人称）：面板内容画在老师旁边的全息面板上，台词变了才让老师说
+	private lastLine = "";
+
+	private renderDialogue(): boolean {
+		const dlg = this.scene.dialogue;
+		if (!dlg || !this.selected) return false;
+		$("panel").hidden = true;
+		this.scene.panelChanged(true);
+		const host = dlg.host();
+		host.innerHTML = this.quiz ? (this.quiz.outcome ? this.resultHtml() : this.quizHtml()) : this.holoTopicHtml();
+		this.bindPanel(host);
+		const [line, mood] = this.teacherLine();
+		if (line !== this.lastLine) {
+			this.lastLine = line;
+			dlg.say(line, mood);
+		}
+		this.updateInset();
+		return true;
+	}
+
+	// 全息面板上的知识点卡：名称、星星、状态和要做的事；说明由老师说出来
+	private holoTopicHtml(): string {
+		const id = this.selected!;
+		const t = this.k.topic(id);
+		const v = this.k.data.villages[t.village];
+		const st = status(this.k, this.progress, id, this.now());
+		const plan = planFor(this.k, this.progress, id, this.now());
+		const leave = `<button class="btn ghost" data-act="close">下次再来</button>`;
+		let actions = "";
+		if (plan.kind === "locked") {
+			actions = plan.missing
+				.map((p) => `<button class="prereq" data-go="${p}"><span class="tag no">去学</span>${esc(this.k.topic(p).name)}</button>`)
+				.join("");
+		} else if (plan.kind === "build") {
+			const s = STAGE[plan.stage];
+			actions = `<button class="btn primary" data-act="start">${icon(s.icon)}开始：${s.name}</button><p class="hint">${s.need}</p>`;
+		} else if (plan.kind === "review") {
+			actions = `<button class="btn warm" data-act="start">${icon("broom")}开始复习</button><p class="hint">答对 2 道题，答错不扣星</p>`;
+		} else {
+			actions = `<button class="btn primary" data-act="practice">${icon("pencil")}练一练</button>`;
+		}
+		return `
+			<button class="close" data-act="close" aria-label="离开">×</button>
+			<h2>${esc(t.name)}</h2>
+			<div class="chips"><span class="chip">${esc(v.unit)}</span><span class="chip">${BUILDING_NAME[t.building]}</span></div>
+			<div class="state"><span>${STATUS_TEXT[st]}</span>${this.starsHtml(stars(this.progress, id))}</div>
+			<div class="action">${actions}${leave}</div>`;
+	}
+
+	// 老师现在要说的话和表情
+	private teacherLine(): [string, Mood] {
+		const id = this.selected!;
+		const t = this.k.topic(id);
+		const teacher = TEACHERS[t.domain];
+		const name = `「${t.name}」`;
+		const q = this.quiz;
+		if (!q) {
+			const plan = planFor(this.k, this.progress, id, this.now());
+			const st = status(this.k, this.progress, id, this.now());
+			const hi = `${teacher.hello}我是${teacher.name}。`;
+			switch (plan.kind) {
+				case "locked":
+					return [`这里还被迷雾挡着呢。先去学会「${plan.missing.map((p) => this.k.topic(p).name).join("」「")}」，迷雾就会散开啦。`, "sad"];
+				case "build":
+					if (plan.stage === 1) {
+						return [`${hi}这里是${name}：${t.description}想在这里盖一座${BUILDING_NAME[t.building]}吗？先答对 2 道基础题，打好地基吧！`, "talk"];
+					}
+					return plan.stage === 2
+						? [`${hi}${name}的地基已经打好啦。再答对 1 道标准题，房子就能盖起来！`, "talk"]
+						: [`${hi}${name}的房子真漂亮！答对 1 道挑战题，就能升金顶哦。`, "talk"];
+				case "wait":
+					return [`${name}今天已经升过级啦。隔一天还会，才算真的学会，明天再来升金顶吧！`, "talk"];
+				case "review":
+					if (st === "goblin") return [`不好啦！哥布林占领了${name}！快答对 2 道题把它赶走！`, "sad"];
+					if (st === "weeds") return [`哎呀，这里长草了……我们一起复习${name}，把草拔掉吧！`, "sad"];
+					return [`${hi}好久不见！${name}该复习啦，答对 2 道题，房子会更结实。`, "talk"];
+				case "practice":
+					return [`${hi}${name}已经是三颗星的金顶啦！要不要再练一练？`, "happy"];
+			}
+		}
+		const s = q.session;
+		if (q.outcome) {
+			const o = q.outcome;
+			if (!o.success) {
+				const roots = o.roots.length ? `地基好像不太稳，先去巩固「${o.roots.map((p) => this.k.topic(p).name).join("」「")}」吧。` : "看看讲解，再试一次吧！";
+				return [`没关系，${roots}`, "sad"];
+			}
+			if (s.plan.kind === "build") return [`${STAGE[s.plan.stage].done}${name}得到了第 ${o.starsAfter} 颗星，你真了不起！`, "cheer"];
+			if (s.plan.kind === "review") return [`打扫干净啦！${name}又闪闪发光了。`, "cheer"];
+			return ["全部答对，太棒了！", "cheer"];
+		}
+		const question = s.questions[q.answered ? s.index - 1 : s.index];
+		if (q.answered) {
+			const ok = s.results.at(-1);
+			if (ok) return [["答对啦！你真棒！", "完全正确！", "太厉害了！", "对啦，就是这样！"][s.index % 4], "happy"];
+			const answer = question.kind === "choice" ? `${question.answer}，${question.choices!.find((c) => c.key === question.answer)?.text ?? ""}` : question.answer;
+			return [`差一点点！正确答案是 ${answer}。${question.explanation ?? ""}`, "sad"];
+		}
+		const opts = question.choices ? `是 ${question.choices.map((c) => `${c.key}，${c.text}`).join("；还是 ")}？` : "";
+		const fresh = question.variantOf ? "这道题我换了几个数字。" : "";
+		return [`第 ${s.index + 1} 题。${fresh}${question.prompt}${opts}`, "talk"];
+	}
+
 	private renderPanel(): void {
+		if (this.renderDialogue()) return;
 		const panel = $("panel");
 		panel.hidden = false;
 		if (this.quiz) {
@@ -309,8 +423,7 @@ export class App {
 		}
 	}
 
-	private bindPanel(): void {
-		const panel = $("panel");
+	private bindPanel(panel: HTMLElement = $("panel")): void {
 		panel.querySelectorAll<HTMLElement>("[data-go]").forEach((el) => {
 			el.onclick = () => this.open(el.dataset.go!, true);
 		});
@@ -472,7 +585,9 @@ export class App {
 				${o.success && plan.kind !== "practice" ? this.starsHtml(o.starsAfter) : ""}
 			</div>
 			${roots}
-			<div class="action">${again}<button class="btn ghost" data-act="back" style="margin-top:10px">返回</button></div>`;
+			<div class="action">${again}<button class="btn ghost" data-act="back" style="margin-top:10px">返回</button>${
+				this.scene.dialogue ? '<button class="btn ghost" data-act="close">离开</button>' : ""
+			}</div>`;
 	}
 
 	private key(k: string): void {
@@ -525,18 +640,12 @@ export class App {
 
 	private speak(): void {
 		const q = this.quiz;
-		if (!q || !("speechSynthesis" in window)) return;
+		if (!q) return;
 		const s = q.session;
 		const question = s.questions[q.answered ? s.index - 1 : s.index];
 		let text = question.prompt;
 		if (question.choices) text += "。" + question.choices.map((c) => `${c.key}，${c.text}`).join("。");
-		const u = new SpeechSynthesisUtterance(text.replace(/\//g, "分之"));
-		u.lang = "zh-CN";
-		u.rate = 0.9;
-		const voice = speechSynthesis.getVoices().find((v) => v.lang.startsWith("zh"));
-		if (voice) u.voice = voice;
-		speechSynthesis.cancel();
-		speechSynthesis.speak(u);
+		say(text);
 	}
 
 	private onKey(e: KeyboardEvent): void {

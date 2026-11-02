@@ -9,6 +9,7 @@ export const TILES = [
 	"gold", "water", "cloud", "wool_red", "wool_white", "wool_blue", "wool_orange", "pillar",
 	"hill_top", "hill_side", "coast_top", "coast_side", "fair_top", "fair_side", "glow", "goblin",
 	"dark", "door", "window", "castle_top", "flower", "pink_leaves", "wool_yellow", "weeds",
+	"fur_brown", "fur_cream", "fur_orange", "fur_white", "fur_black", "fur_pink", "eye", "beak",
 ] as const;
 
 export type Tile = (typeof TILES)[number];
@@ -111,6 +112,21 @@ const DRAW: Record<Tile, Px> = {
 	pink_leaves: (_x, _y, r) => (r() < 0.2 ? shade(0xe08aac, 0.85) : shade(0xf6b3cc, 0.9 + r() * 0.15)),
 	wool_yellow: noise(0xf2d23a, 0.06),
 	weeds: (_x, _y, r) => (r() < 0.3 ? shade(0x24561f, 0.9) : shade(0x3a7a2a, 0.85 + r() * 0.2)),
+	// 动物老师的毛皮：柔和的细噪点，不要太花
+	fur_brown: noise(0x9a6a44, 0.07),
+	fur_cream: noise(0xf2dcb4, 0.05),
+	fur_orange: noise(0xf08a3a, 0.06),
+	fur_white: noise(0xfaf7f2, 0.04),
+	fur_black: noise(0x3a3640, 0.06),
+	fur_pink: noise(0xf6a9bf, 0.05),
+	// 眼睛：白底、大黑眼珠、一个高光点
+	eye: (x, y) => {
+		const d = Math.hypot(x - 7.5, y - 8);
+		if (d < 2 && x > 8 && y < 7) return hex(0xffffff);
+		if (d < 5.5) return hex(0x1e1a24);
+		return hex(0xffffff);
+	},
+	beak: noise(0xf6c23a, 0.06),
 };
 
 export interface Atlas {
