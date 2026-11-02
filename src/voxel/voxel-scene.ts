@@ -10,7 +10,7 @@ import { type Kingdom, type Progress, type Status, stars as starsOf, status as s
 import type { KingdomData } from "../core/types";
 import { labelCard } from "../scene/label";
 import { type Mood, TEACHERS } from "../scene/teachers";
-import type { BattleView, Dialogue, View, VillageMark } from "../scene/view";
+import type { BattleView, Dialogue, Spot, View, VillageMark } from "../scene/view";
 import { type Battle, type BattleEvent, type EnemyKind, current as battleTarget, rewardFor } from "../core/defense";
 import { speak, stopSpeaking } from "../ui/speech";
 import { type Atlas, createAtlas } from "./atlas";
@@ -654,6 +654,38 @@ export class VoxelScene implements View {
 	goHome(): void {
 		this.player.teleport(0.5, 13.5, 0.5, 0);
 		this.player.pitch = 0.12;
+	}
+
+	// 地图上的“我在这里”：布局坐标换成格子，站到离它最近的能站的格子上，面朝原来的方向
+	setSpot(spot: Spot): void {
+		const cx = Math.floor(spot.x / BLOCK);
+		const cz = Math.floor(spot.y / BLOCK);
+		for (let r = 0; r <= 8; r++) {
+			let best: [number, number] | null = null;
+			let bestD = Infinity;
+			for (let dx = -r; dx <= r; dx++) {
+				for (let dz = -r; dz <= r; dz++) {
+					if (Math.max(Math.abs(dx), Math.abs(dz)) !== r) continue;
+					if (!Number.isFinite(this.topAt(cx + dx, cz + dz))) continue;
+					const d = dx * dx + dz * dz;
+					if (d < bestD) {
+						best = [cx + dx, cz + dz];
+						bestD = d;
+					}
+				}
+			}
+			if (best) {
+				this.player.teleport(best[0] + 0.5, best[1] + 0.5, spot.lookX / BLOCK, spot.lookY / BLOCK);
+				return;
+			}
+		}
+	}
+
+	// 玩家现在站的地方和面朝的方向（换回地图时，小人站到这里）
+	getSpot(): Spot {
+		const p = this.player.position;
+		const yaw = this.player.yaw;
+		return { x: p.x * BLOCK, y: p.z * BLOCK, lookX: (p.x - Math.sin(yaw) * 3) * BLOCK, lookY: (p.z - Math.cos(yaw) * 3) * BLOCK };
 	}
 
 	setInset(right: number, bottom: number): void {

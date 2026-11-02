@@ -1601,3 +1601,13 @@ body:has(#voxel.in-dialogue) .grades {
 #voxel.in-dialogue:has(.holo-dock.portrait:not([hidden])) .labels .label.card:not(.shield) {
 	display: none;
 }
+
+/* 地图上“我在这里”的小人卡片 */
+.label.card.plot.me {
+	--card-bg: rgba(61, 123, 224, 0.95);
+	background: var(--card-bg);
+	color: #fff;
+	border-color: #9cc4ff;
+	font-size: 12px;
+	padding: 2px 8px 3px;
+}

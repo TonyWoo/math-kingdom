@@ -21,6 +21,14 @@ export interface BattleView {
 // 村庄路牌上的旗：none 还不能打，ready 可以保卫（红旗），defended 守住过（金旗）
 export type VillageMark = "none" | "ready" | "defended";
 
+// “我在这里”的位置，布局坐标（王城在原点，y 对应场景的 z）：站在 (x, y)，面朝 (lookX, lookY)
+export interface Spot {
+	x: number;
+	y: number;
+	lookX: number;
+	lookY: number;
+}
+
 export interface View {
 	// 点到（或第一人称里对着点击）一块地；null 表示点在空地上。第一人称里点到村庄路牌时是 "village:序号"
 	onPick: (id: string | null) => void;
@@ -43,4 +51,8 @@ export interface View {
 	dialogue?: Dialogue;
 	battle?: BattleView;
 	villages?(marks: VillageMark[]): void;
+	// 当前站的位置（地图视角是小人标记，第一人称是玩家）；setSpot 把小人或玩家放到那里
+	onSpot?: (spot: Spot) => void;
+	getSpot?(): Spot | null;
+	setSpot?(spot: Spot, focus?: boolean): void; // focus：地图视角的镜头也对准它
 }

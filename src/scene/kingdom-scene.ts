@@ -9,7 +9,7 @@ import type { KingdomData } from "../core/types";
 import { rewardFor } from "../core/defense";
 import { type Assets, type ModelName, instantiate } from "./assets";
 import { labelCard } from "./label";
-import type { View, VillageMark } from "./view";
+import type { Spot, View, VillageMark } from "./view";
 import { createBubble, createBuilding, createGoblin, createOpenMarker, createWeeds, geo, mat } from "./buildings";
 import { BASE_H, COLORS, SCALE, createWorld, terraceHeight } from "./world";
 
@@ -58,6 +58,10 @@ export class KingdomScene implements View {
 	readonly camera: THREE.PerspectiveCamera;
 	readonly controls: MapControls;
 	onPick: (id: string | null) => void = () => {};
+	onSpot: (spot: Spot) => void = () => {};
+	private world!: THREE.Group;
+	private marker = new THREE.Group(); // “我在这里”的小人
+	private spot: Spot | null = null;
 
 	private scene = new THREE.Scene();
 	private labels: CSS2DRenderer;
@@ -112,7 +116,9 @@ export class KingdomScene implements View {
 		this.controls.maxPolarAngle = 1.2;
 		this.controls.zoomToCursor = true;
 
-		this.scene.add(createWorld(data, assets));
+		this.world = createWorld(data, assets);
+		this.scene.add(this.world);
+		this.buildMarker();
 		this.addPaths();
 		this.pads = this.addPads();
 		this.fog = this.addFog();
@@ -448,7 +454,14 @@ export class KingdomScene implements View {
 			const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
 			down = null;
 			if (moved > 6) return;
-			this.onPick(this.pick(e.clientX, e.clientY));
+			const id = this.pick(e.clientX, e.clientY);
+			// 点到哪里，小人就站到哪里：点到地块时站在地块靠王城一侧、面朝它；点到空地就站在那里
+			const spot = id ? this.spotNear(id) : this.groundSpot(e.clientX, e.clientY);
+			if (spot) {
+				this.setSpot(spot);
+				this.onSpot(spot);
+			}
+			this.onPick(id);
 		});
 	}
 
@@ -580,6 +593,88 @@ export class KingdomScene implements View {
 		}
 	}
 
+	// ---- “我在这里”的小人 ----
+
+	// 方块风格的小朋友：蓝衣服、黄帽子，脚下一圈会呼吸的光环，头上一张“我”字卡片
+	private buildMarker(): void {
+		const g = this.marker;
+		const add = (geom: THREE.BufferGeometry, color: number, sx: number, sy: number, sz: number, y: number, x = 0, z = 0) => {
+			const m = new THREE.Mesh(geom, mat(color));
+			m.scale.set(sx, sy, sz);
+			m.position.set(x, y, z);
+			g.add(m);
+		};
+		add(geo.box, 0x2f3a5a, 0.05, 0.1, 0.05, 0.05, -0.035);
+		add(geo.box, 0x2f3a5a, 0.05, 0.1, 0.05, 0.05, 0.035);
+		add(geo.box, 0x3d7be0, 0.13, 0.13, 0.08, 0.165);
+		add(geo.box, 0xf3c9a0, 0.11, 0.11, 0.11, 0.285);
+		add(geo.box, 0xf2c230, 0.13, 0.04, 0.13, 0.355);
+		add(geo.box, 0x222222, 0.02, 0.02, 0.01, 0.295, -0.025, 0.056);
+		add(geo.box, 0x222222, 0.02, 0.02, 0.01, 0.295, 0.025, 0.056);
+		const ring = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.018, 6, 28), new THREE.MeshBasicMaterial({ color: 0x5ff3ff }));
+		ring.rotation.x = -Math.PI / 2;
+		ring.position.y = 0.01;
+		ring.userData.ring = true;
+		g.add(ring);
+		const label = new CSS2DObject(labelCard("plot", "我在这里"));
+		label.element.classList.add("me");
+		label.center.set(0.5, 1);
+		label.position.set(0, 0.48, 0);
+		g.add(label);
+		g.scale.setScalar(1.6); // 比建筑小，但一眼能看到
+		g.visible = false;
+		this.scene.add(g);
+	}
+
+	// 布局坐标 → 场景里那一点的地面高度（往下打一条射线到地形上）
+	private groundAt(x: number, z: number): number {
+		this.raycaster.set(new THREE.Vector3(x, 20, z), new THREE.Vector3(0, -1, 0));
+		// 跳过森林（InstancedMesh）和王城，只要地面
+		const hit = this.raycaster.intersectObject(this.world, true).find((h) => !(h.object instanceof THREE.InstancedMesh));
+		return hit ? hit.point.y : terraceHeight(1);
+	}
+
+	// 地块靠王城一侧 0.6 个单位，面朝地块
+	private spotNear(id: string): Spot {
+		const t = this.k.topic(id);
+		const len = Math.hypot(t.x, t.y) || 1;
+		return { x: t.x - (t.x / len) * 60, y: t.y - (t.y / len) * 60, lookX: t.x, lookY: t.y };
+	}
+
+	// 点在空地上：射线打到地形的那一点；面朝最近的地块（离得太远就面朝外）
+	private groundSpot(clientX: number, clientY: number): Spot | null {
+		const rect = this.renderer.domElement.getBoundingClientRect();
+		const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+		this.raycaster.setFromCamera(ndc, this.camera);
+		const hit = this.raycaster.intersectObject(this.world, true)[0];
+		if (!hit) return null;
+		const x = hit.point.x / SCALE;
+		const y = hit.point.z / SCALE;
+		if (Math.hypot(x, y) > this.data.rings.at(-1)!.r2 + 150) return null; // 点到海上了
+		let best = null as null | { x: number; y: number; d: number };
+		for (const t of this.data.topics) {
+			const d = Math.hypot(t.x - x, t.y - y);
+			if (!best || d < best.d) best = { x: t.x, y: t.y, d };
+		}
+		if (best && best.d < 300) return { x, y, lookX: best.x, lookY: best.y };
+		const len = Math.hypot(x, y) || 1;
+		return { x, y, lookX: x + (x / len) * 100, lookY: y + (y / len) * 100 };
+	}
+
+	getSpot(): Spot | null {
+		return this.spot;
+	}
+
+	setSpot(spot: Spot, focus = false): void {
+		this.spot = spot;
+		const x = spot.x * SCALE;
+		const z = spot.y * SCALE;
+		this.marker.position.set(x, this.groundAt(x, z), z);
+		this.marker.rotation.y = Math.atan2(spot.lookX - spot.x, spot.lookY - spot.y);
+		this.marker.visible = true;
+		if (focus) this.lookAt(this.marker.position.clone(), 7);
+	}
+
 	// ---- View 接口：界面通过这些方法操作地图视角 ----
 
 	focusPlot(id: string, immediate = false): void {
@@ -631,6 +726,12 @@ export class KingdomScene implements View {
 		this.updateLabels();
 		const pulse = 1 + 0.08 * Math.sin(this.clock * 5);
 		this.selectRing.scale.set(pulse, pulse, pulse);
+		if (this.marker.visible) {
+			const ring = this.marker.children.find((c) => c.userData.ring)!;
+			const s = 1 + 0.15 * Math.sin(this.clock * 4);
+			ring.scale.set(s, s, s);
+			this.marker.children[3].position.y = 0.285 + Math.abs(Math.sin(this.clock * 3)) * 0.015;
+		}
 		this.fog.position.y = Math.sin(this.clock * 0.8) * 0.03;
 		this.renderer.render(this.scene, this.camera);
 		this.labels.render(this.scene, this.camera);

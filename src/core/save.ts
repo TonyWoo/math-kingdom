@@ -8,6 +8,7 @@ export interface SaveData {
 	progress: Progress;
 	demo?: boolean; // 是演示进度（设置里可以清空）
 	defense?: Record<string, { won: boolean; best: number }>; // 保卫战记录，键是村庄序号
+	spot?: { x: number; y: number; lookX: number; lookY: number }; // “我在这里”的位置（布局坐标）
 }
 
 export function load(): SaveData | null {

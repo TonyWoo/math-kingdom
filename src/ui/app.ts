@@ -14,7 +14,7 @@ import * as save from "../core/save";
 import { type Battle, type BattleResult, KIND, MAX_THROUGH, WAVES, rewardFor, answer as battleAnswer, canDefend, createBattle, current as battleTarget, settle, step as battleStep, villageReady } from "../core/defense";
 import type { Question } from "../core/types";
 import { type Mood, TEACHERS } from "../scene/teachers";
-import type { View } from "../scene/view";
+import type { Spot, View } from "../scene/view";
 import { speak as say, stopSpeaking } from "./speech";
 
 const GRADE_NAME = ["一年级", "二年级", "三年级", "四年级", "五年级", "六年级"];
@@ -58,6 +58,7 @@ export class App {
 	private selected: string | null = null;
 	private quiz: QuizState | null = null;
 	private dayOffset: number;
+	private spot: Spot | null = null; // “我在这里”：地图上的小人、第一人称的出发点
 	private toastTimer = 0;
 
 	constructor(k: Kingdom, scene: View) {
@@ -73,6 +74,7 @@ export class App {
 			this.progress = saved?.progress ?? {};
 			this.demo = saved?.demo ?? false;
 			this.defense = saved?.defense ?? {};
+			this.spot = saved?.spot ?? null;
 		}
 
 		this.attach(scene);
@@ -84,12 +86,19 @@ export class App {
 		if (select && k.topics.has(select)) {
 			scene.focusPlot(select, true);
 			this.open(select, false);
+			this.moveSpot(this.spotNear(select));
 		} else if (focus >= 1 && focus <= 6) {
 			scene.focusGrade(focus, true);
+			if (this.spot) scene.setSpot?.(this.spot); // 小人还在原来的地方，镜头听网址的
 		} else {
 			// 从“开拓前线”开始：教材顺序里第一块空地
 			const frontier = k.order.find((id) => status(k, this.progress, id, this.now()) === "open") ?? k.order[0];
-			scene.focusPlot(frontier, true);
+			if (this.spot) {
+				scene.setSpot?.(this.spot, true);
+			} else {
+				scene.focusPlot(frontier, true);
+				this.moveSpot(this.spotNear(frontier));
+			}
 			if (Object.keys(this.progress).length === 0) {
 				this.toast(`欢迎来到数学王国！从王城旁边的「${k.topic(frontier).name}」开始建造吧。`, 6000);
 			}
@@ -103,8 +112,25 @@ export class App {
 			else if (id.startsWith("village:")) this.openVillage(Number(id.slice(8)));
 			else this.open(id, false);
 		};
+		view.onSpot = (spot) => {
+			this.spot = spot;
+			this.persist();
+		};
 		view.refresh(this.progress, this.now());
 		this.markVillages();
+	}
+
+	// 地块靠王城一侧，面朝它（和地图视角点地块时一样）
+	private spotNear(id: string): Spot {
+		const t = this.k.topic(id);
+		const len = Math.hypot(t.x, t.y) || 1;
+		return { x: t.x - (t.x / len) * 60, y: t.y - (t.y / len) * 60, lookX: t.x, lookY: t.y };
+	}
+
+	private moveSpot(spot: Spot): void {
+		this.spot = spot;
+		this.scene.setSpot?.(spot);
+		this.persist();
 	}
 
 	// ---- 保卫战（第一人称） ----
@@ -310,12 +336,19 @@ export class App {
 	setView(view: View): void {
 		if (view === this.scene) return;
 		if (this.village !== null) this.close(); // 保卫战只在第一人称里
+		// 从哪里来就站到哪里：地图上的小人 → 第一人称的出发点；第一人称走到的地方 → 地图上的小人
+		const spot = this.scene.getSpot?.() ?? this.spot;
+		if (spot) {
+			this.spot = spot;
+			this.persist();
+		}
 		this.scene.show(false);
 		this.scene = view;
 		this.attach(view);
 		view.show(true);
 		view.select(this.selected);
-		if (this.selected) view.focusPlot(this.selected, true);
+		if (spot && view.setSpot) view.setSpot(spot, true);
+		else if (this.selected) view.focusPlot(this.selected, true);
 		this.lastLine = "";
 		if (this.selected) {
 			this.renderPanel();
@@ -335,7 +368,7 @@ export class App {
 	}
 
 	private persist(): void {
-		save.store({ progress: this.progress, demo: this.demo, defense: this.defense });
+		save.store({ progress: this.progress, demo: this.demo, defense: this.defense, spot: this.spot ?? undefined });
 	}
 
 	private setupChrome(): void {
@@ -434,7 +467,11 @@ export class App {
 		this.village = null;
 		this.selected = id;
 		this.scene.select(id);
-		if (fly) this.scene.focusPlot(id);
+		if (fly) {
+			this.scene.focusPlot(id);
+			// 巡视、先修链接跳过去时，地图上的小人也跟过去（第一人称里 focusPlot 自己找站的地方）
+			if (!this.scene.dialogue) this.moveSpot(this.spotNear(id));
+		}
 		this.renderPanel();
 	}
 
