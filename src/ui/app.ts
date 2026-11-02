@@ -425,12 +425,19 @@ export class App {
 			this.toast("进度已清空，从头开始建造吧");
 		};
 		const musicBtn = $<HTMLButtonElement>("music-toggle");
-		const paintMusic = () => (musicBtn.textContent = music.enabled ? "音乐：开" : "音乐：关");
+		const muteBtn = $<HTMLButtonElement>("mute");
+		const paintMusic = () => {
+			musicBtn.textContent = music.enabled ? "音乐：开" : "音乐：关";
+			muteBtn.querySelector("img")!.src = `${import.meta.env.BASE_URL}art/ui/icon_${music.enabled ? "speaker" : "mute"}.png`;
+			muteBtn.title = music.enabled ? "静音" : "打开音乐";
+		};
 		paintMusic();
-		musicBtn.onclick = () => {
+		const toggleMusic = () => {
 			music.setEnabled(!music.enabled);
 			paintMusic();
 		};
+		musicBtn.onclick = toggleMusic;
+		muteBtn.onclick = toggleMusic;
 		window.addEventListener("keydown", (e) => this.onKey(e));
 		window.addEventListener("resize", () => this.updateInset());
 	}

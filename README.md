@@ -11,7 +11,7 @@
 - **地基不稳时寻根**：同一步连续失败两次，会列出需要先巩固的先修知识点。
 - **复习不总是同几道题**：优先出上次没出过的题；能安全换数字的题会变成“换了数字的新题”（按标准答案的算式重新算答案，讲解也跟着换），建造失败后重试也会换数字。
 - **适合小朋友**：大号数字键盘，题目可以朗读，平板和手机都能用。
-- **有音乐**：平时是轻快的背景音乐，打保卫战时换成战鼓，建成或守住村庄时有庆祝音乐；都是 CC0 作品（见 `public/audio/CREDITS.md`），第一次点按后开始播放，设置里可以关。
+- **有音乐**：平时是轻快的背景音乐，打保卫战时换成战鼓，建成或守住村庄时有庆祝音乐；都是 CC0 作品（见 `public/audio/CREDITS.md`），第一次点按后开始播放，顶栏的喇叭按钮或设置里可以关。
 - **手机上更省地方**：窄屏时顶栏只显示图标，不显示文字。
 
 ## 两种视角
@@ -87,8 +87,8 @@ its shield walk toward the plaza, and each correct answer lets a tower zap the e
 waves that adapt to how well you answer, pause any time). Scoring 80% counts as a review of the whole village; a
 defended village becomes a walled town with a reward decoration, visible on the map too. Built with Vite, TypeScript and three.js; progress is stored in
 the browser. Music is included — a cheerful background loop, war drums during a defense and a fanfare when a plot is
-built or a village defended, all CC0 (see `public/audio/CREDITS.md`), starting after the first tap and switchable in
-Settings. On narrow screens the top bar shows icons only, without text labels.
+built or a village defended, all CC0 (see `public/audio/CREDITS.md`), starting after the first tap and switchable from
+the speaker button in the top bar or in Settings. On narrow screens the top bar shows icons only, without text labels.
 
 ```bash
 npm install && npm run dev
