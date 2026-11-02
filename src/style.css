@@ -742,17 +742,37 @@ dialog a {
 		font-size: 18px;
 	}
 
+	/* 第一行：图标 + 统计；第二行：整行按钮（含学科切换），各占一行才放得下 */
 	.stats {
+		order: 0;
+		flex: 1;
+		flex-basis: auto;
+		font-size: 13px;
+		gap: 8px;
+	}
+
+	.actions {
 		order: 3;
 		flex-basis: 100%;
-		font-size: 13px;
-		gap: 10px;
+		justify-content: space-between;
+		gap: 6px;
 	}
 
 	.actions .btn {
 		min-height: 36px;
-		padding: 4px 9px;
+		padding: 4px 6px;
 		font-size: 14px;
+	}
+
+	.subject-select {
+		height: 36px;
+		width: 84px;
+		padding: 0 2px 0 8px;
+		font-size: 14px;
+	}
+
+	.toast {
+		top: 108px;
 	}
 
 	/* 手机上顶栏只显示图标，省空间 */

@@ -46,6 +46,7 @@
 		{
 			"id": "morality",
 			"name": "道德与法治",
+			"short": "道法",
 			"kingdom": "品德王国",
 			"topics": 159,
 			"questions": 636,

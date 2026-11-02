@@ -14,6 +14,7 @@ import { App } from "./ui/app";
 interface SubjectInfo {
 	id: string;
 	name: string;
+	short?: string; // 顶栏菜单里的短名（比如道德与法治显示为道法）
 	kingdom: string;
 }
 
@@ -45,7 +46,7 @@ const subjectSelect = document.getElementById("subject") as HTMLSelectElement;
 for (const s of subjects) {
 	const opt = document.createElement("option");
 	opt.value = s.id;
-	opt.textContent = s.name;
+	opt.textContent = s.short ?? s.name;
 	subjectSelect.appendChild(opt);
 }
 subjectSelect.value = info.id;

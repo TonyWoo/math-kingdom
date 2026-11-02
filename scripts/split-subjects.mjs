@@ -308,7 +308,7 @@ function main() {
 		writeFileSync(join(root, "public", "data", `${id}.json`), JSON.stringify(r.data) + "\n");
 		// 数学同时写一份到 src/data/kingdom.json：测试和旧管线继续用同一份数据
 		if (id === "math") writeFileSync(join(root, "src", "data", "kingdom.json"), JSON.stringify(r.data) + "\n");
-		index.push({ id, name: cfg.name, kingdom: cfg.kingdom, topics: r.topics, questions: r.questions, grades: r.grades });
+		index.push({ id, name: cfg.name, short: cfg.short, kingdom: cfg.kingdom, topics: r.topics, questions: r.questions, grades: r.grades });
 		console.log(`${id}（${cfg.name}）：topics ${r.topics}  questions ${r.questions}  villages ${r.villages}  grades ${r.grades.join("-")}`);
 	}
 	if (!only) {
