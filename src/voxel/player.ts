@@ -1,6 +1,6 @@
 // 第一人称玩家：走路、看、跳、碰撞。
-//   电脑：点一下画面锁定鼠标；WASD / 方向键移动，Shift 跑，空格跳，鼠标看；点击或 E 和准星对着的地块互动，Esc 释放鼠标。
-//   手机：左半屏按住拖动是摇杆，右半屏拖动是转头，轻点是和点到的东西互动。
+//   电脑：点一下画面锁定鼠标；WASD / 方向键移动，Shift 跑，空格跳，鼠标看；点击或 E 和准星对着的地块互动，Esc 释放鼠标；滚轮放大缩小。
+//   手机：左半屏按住拖动是摇杆，右半屏拖动是转头，轻点是和点到的东西互动；双指捏合放大缩小。
 // 碰撞只看每一列地面的高度：比脚高不超过 STEP 的自动迈上去，更高的（台阶、建筑、树干）挡住。
 
 import * as THREE from "three";
@@ -32,6 +32,8 @@ export class Player {
 	lockY: number | null = null;
 	onInteract: (screen?: { x: number; y: number }) => void = () => {};
 	onLockChange: (locked: boolean) => void = () => {};
+	onPinch: (ratio: number) => void = () => {}; // 双指捏合缩放：ratio 是这一次移动里两指距离的变化倍数
+	private pinchDist = 0;
 
 	constructor(el: HTMLElement, topAt: TopAt) {
 		this.el = el;
@@ -90,8 +92,8 @@ export class Player {
 		window.addEventListener("keyup", (e) => this.keys.delete(e.code));
 		window.addEventListener("blur", () => this.keys.clear());
 
-		// 触摸：每根手指记住它是摇杆还是转头
-		const touches = new Map<number, { kind: "move" | "look"; x0: number; y0: number; x: number; y: number; t: number }>();
+		// 触摸：每根手指记住它是摇杆还是转头；两根手指同时在就改成捏合缩放
+		const touches = new Map<number, { kind: "move" | "look" | "pinch"; x0: number; y0: number; x: number; y: number; t: number }>();
 		el.addEventListener("touchstart", (e) => {
 			if (!this.enabled) return;
 			e.preventDefault();
@@ -104,6 +106,13 @@ export class Player {
 					this.joystick.style.top = `${t.clientY}px`;
 				}
 			}
+			if (touches.size === 2) {
+				for (const s of touches.values()) s.kind = "pinch";
+				this.stick = { x: 0, y: 0 };
+				this.joystick.hidden = true;
+				const [a, b] = [...touches.values()];
+				this.pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+			}
 		}, { passive: false });
 		el.addEventListener("touchmove", (e) => {
 			if (!this.enabled) return;
@@ -111,7 +120,18 @@ export class Player {
 			for (const t of Array.from(e.changedTouches)) {
 				const s = touches.get(t.identifier);
 				if (!s) continue;
-				if (s.kind === "look") {
+				if (s.kind === "pinch") {
+					s.x = t.clientX;
+					s.y = t.clientY;
+					if (touches.size === 2 && this.pinchDist > 0) {
+						const [a, b] = [...touches.values()];
+						const d = Math.hypot(a.x - b.x, a.y - b.y);
+						if (d > 0) {
+							this.onPinch(d / this.pinchDist);
+							this.pinchDist = d;
+						}
+					}
+				} else if (s.kind === "look") {
 					this.turn((t.clientX - s.x) * 0.006, (t.clientY - s.y) * 0.006);
 				} else {
 					const dx = t.clientX - s.x0;
@@ -133,6 +153,10 @@ export class Player {
 				if (s.kind === "move") {
 					this.stick = { x: 0, y: 0 };
 					this.joystick.hidden = true;
+				}
+				if (s.kind === "pinch") {
+					this.pinchDist = 0;
+					continue; // 捏合的手指抬起来不算点按
 				}
 				// 轻点（没怎么动、时间短）当作互动；左半屏的轻点也算
 				if (Math.hypot(t.clientX - s.x0, t.clientY - s.y0) < 10 && performance.now() - s.t < 350) {

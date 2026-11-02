@@ -127,6 +127,8 @@ export class VoxelScene implements View {
 		host: () => this.holoBody,
 		say: (text, mood) => this.say(text, mood),
 	};
+	private fovTarget = 70; // 放大的目标焦距（fov），70 是默认视角
+	private fovNow = 70;
 	private raycaster = new THREE.Raycaster();
 	private bursts: { points: THREE.Points; v: Float32Array; age: number }[] = [];
 	private clock = 0;
@@ -206,8 +208,8 @@ export class VoxelScene implements View {
 		this.help = document.createElement("div");
 		this.help.className = "fp-help";
 		this.help.innerHTML = matchMedia("(pointer: fine)").matches
-			? "<b>点击画面开始</b><span>WASD 移动 · 鼠标看 · 空格跳 · Shift 跑</span><span>准星对着地块，点击或按 E 查看 · Esc 释放鼠标</span>"
-			: "<b>左手拖动走路，右手拖动看</b><span>点一下地块查看</span>";
+			? "<b>点击画面开始</b><span>WASD 移动 · 鼠标看 · 空格跳 · Shift 跑 · 滚轮放大</span><span>准星对着地块，点击或按 E 查看 · Esc 释放鼠标</span>"
+			: "<b>左手拖动走路，右手拖动看</b><span>点一下地块查看 · 双指捏合放大</span>";
 		container.appendChild(this.help);
 
 		this.dock = document.createElement("div");
@@ -222,6 +224,15 @@ export class VoxelScene implements View {
 
 		this.player = new Player(this.renderer.domElement, (x, z) => this.topAt(x, z));
 		this.player.onInteract = (screen) => this.interact(screen);
+		// 放大：双指捏合（手机）和滚轮（电脑）调焦距，fov 从 70 拉到 28，看远处盾牌和建筑更清楚
+		this.player.onPinch = (ratio) => {
+			this.fovTarget = Math.max(28, Math.min(70, this.fovTarget / ratio));
+		};
+		this.renderer.domElement.addEventListener("wheel", (e) => {
+			if (!this.visible) return;
+			e.preventDefault();
+			this.fovTarget = Math.max(28, Math.min(70, this.fovTarget * (e.deltaY > 0 ? 1.15 : 0.87)));
+		}, { passive: false });
 		this.player.onLockChange = (locked) => {
 			this.help.hidden = locked || !matchMedia("(pointer: fine)").matches || this.panelOpen;
 		};
@@ -714,6 +725,10 @@ export class VoxelScene implements View {
 		if (!visible) {
 			this.player.unlock();
 			this.endDialogue();
+			this.fovTarget = 70; // 离开第一人称时把放大还原
+			this.fovNow = 70;
+			this.camera.fov = 70;
+			this.camera.updateProjectionMatrix();
 		}
 		else this.resize();
 	}
@@ -756,6 +771,12 @@ export class VoxelScene implements View {
 		if (!this.visible) return;
 		this.clock += dt;
 		this.player.update(dt, this.camera);
+		// 焦距平滑趋近目标（放大/还原）
+		if (Math.abs(this.fovNow - this.fovTarget) > 0.05) {
+			this.fovNow += (this.fovTarget - this.fovNow) * Math.min(1, dt * 12);
+			this.camera.fov = this.fovNow;
+			this.camera.updateProjectionMatrix();
+		}
 
 		// 准星提示
 		const hover = matchMedia("(pointer: fine)").matches && this.player.locked ? this.target() : null;
