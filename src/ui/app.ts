@@ -435,6 +435,7 @@ export class App {
 			}
 			this.open(list[0], true);
 		};
+		$("defend").onclick = () => this.openDefense();
 		const dialog = $<HTMLDialogElement>("settings");
 		$("settings-btn").onclick = () => {
 			const s = summary(this.k, this.progress, this.now());
@@ -498,6 +499,39 @@ export class App {
 			(this.demo ? `<span class="muted">演示进度</span>` : "");
 		const care = s.due + s.weeds + s.goblin;
 		$("patrol").innerHTML = `${icon("patrol")}<span class="lbl">今日巡视</span>${care ? `<span class="badge">${care}</span>` : ""}`;
+		const readyVillages = this.k.data.villages.filter((_, i) => canDefend(this.k, this.progress, i)).length;
+		$("defend").innerHTML = `${icon("castle")}<span class="lbl">保卫战</span>${readyVillages ? `<span class="badge">${readyVillages}</span>` : ""}`;
+	}
+
+	// 工具栏的保卫战入口：跳到一个能打的村庄打开它的面板；
+	// 还没有能打的，就打开最接近达标的村（面板里列着还差哪几块地），并先说明一句
+	private openDefense(): void {
+		if (this.quiz && !this.quiz.outcome) {
+			this.toast("先把这次答题做完吧");
+			return;
+		}
+		let ready = -1;
+		let best = -1;
+		let bestMissing = Infinity;
+		this.k.data.villages.forEach((v, i) => {
+			if (ready < 0 && canDefend(this.k, this.progress, i)) ready = i;
+			const missing = v.plots.filter((id) => stars(this.progress, id) < 2).length;
+			if (missing < bestMissing) {
+				bestMissing = missing;
+				best = i;
+			}
+		});
+		const i = ready >= 0 ? ready : best;
+		if (i < 0) return;
+		const v = this.k.data.villages[i];
+		if (ready < 0) this.toast(`还没有村庄能保卫——最接近的是「${v.name}」，还差 ${bestMissing} 块地到 2 星`, 5000);
+		// 目标村被年级筛选挡住时先恢复全部，免得跳过去什么都看不见
+		if (this.gradeFilter !== null && v.grade !== this.gradeFilter) this.setGradeFilter(null);
+		if (!this.scene.dialogue) {
+			this.scene.focusPlot(v.plots[0]);
+			this.moveSpot(this.spotNear(v.plots[0]));
+		}
+		this.openVillage(i);
 	}
 
 	// 地图按年级筛选：只显示这一年级的内容，镜头也飞过去；null 恢复全部

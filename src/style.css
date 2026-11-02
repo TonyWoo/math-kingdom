@@ -755,12 +755,12 @@ dialog a {
 		order: 3;
 		flex-basis: 100%;
 		justify-content: space-between;
-		gap: 6px;
+		gap: 4px;
 	}
 
 	.actions .btn {
 		min-height: 36px;
-		padding: 4px 6px;
+		padding: 4px 4px;
 		font-size: 14px;
 	}
 
