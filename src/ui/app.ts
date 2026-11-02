@@ -11,7 +11,7 @@ import { type Kingdom, type Progress, type Status, demoProgress, needsCare, star
 import { answerCount } from "../core/judge";
 import { type Outcome, type Plan, QuizSession, planFor } from "../core/quiz";
 import * as save from "../core/save";
-import { type Battle, type BattleResult, MAX_THROUGH, WAVES, answer as battleAnswer, canDefend, createBattle, current as battleTarget, settle, step as battleStep, villageReady } from "../core/defense";
+import { type Battle, type BattleResult, KIND, MAX_THROUGH, WAVES, rewardFor, answer as battleAnswer, canDefend, createBattle, current as battleTarget, settle, step as battleStep, villageReady } from "../core/defense";
 import type { Question } from "../core/types";
 import { type Mood, TEACHERS } from "../scene/teachers";
 import type { View } from "../scene/view";
@@ -115,7 +115,9 @@ export class App {
 		paused: boolean;
 		input: string;
 		note: string; // 老师要说的一句（打中、冲过来、新一波……）
+		mood: Mood;
 		result?: BattleResult;
+		reward?: string; // 第一次守住时得到的装饰
 	} | null = null;
 
 	// 村庄路牌上的旗：可以保卫的红旗，守住过的金旗
@@ -140,7 +142,7 @@ export class App {
 	private startBattle(): void {
 		if (this.village === null) return;
 		const b = createBattle(this.k, this.progress, this.village);
-		this.fight = { b, paused: false, input: "", note: "开始" };
+		this.fight = { b, paused: false, input: "", note: "开始", mood: "talk" };
 		this.scene.battle?.start(b);
 		this.renderPanel();
 	}
@@ -159,8 +161,20 @@ export class App {
 		if (!ev.length) return;
 		this.scene.battle.events(ev);
 		for (const e of ev) {
-			if (e.type === "through") f.note = `糟糕，有一个骑士冲进广场了！还能再挡住 ${Math.max(0, MAX_THROUGH - f.b.through)} 个。`;
-			if (e.type === "wave") f.note = `第 ${e.wave + 1} 波来了，骑士更快啦！`;
+			if (e.type === "through") {
+				const who = KIND[e.enemy.kind].name;
+				const left = Math.max(0, MAX_THROUGH - f.b.through);
+				f.note = e.enemy.kind === "boss" ? `哥布林大王冲进广场了！一下子少了 2 颗心，还剩 ${left} 颗。` : `糟糕，${who}冲进广场了！还能再挡住 ${left} 个。`;
+				f.mood = "sad";
+			}
+			if (e.type === "wave") {
+				f.note = e.wave === 1 ? "第 2 波来了！小心，狼跑得很快！" : "最后一波！投石车要打两次，哥布林大王压轴，它的盾牌上是一道算式！";
+				f.mood = "talk";
+			}
+			if (e.type === "spawn" && e.enemy.kind === "boss") {
+				f.note = "哥布林大王来啦！要打中它三次，每次算出它盾牌上的算式。";
+				f.mood = "talk";
+			}
 		}
 		if (f.b.finished) this.finishBattle();
 		else this.renderPanel();
@@ -173,6 +187,7 @@ export class App {
 		const key = String(f.b.village);
 		const prev = this.defense[key];
 		this.defense[key] = { won: (prev?.won ?? false) || f.result.won, best: Math.max(prev?.best ?? 0, f.result.accuracy) };
+		if (f.result.won && !prev?.won) f.reward = rewardFor(f.b.village).name;
 		this.persist();
 		this.scene.refresh(this.progress, now);
 		this.markVillages();
@@ -190,9 +205,21 @@ export class App {
 			if (res) {
 				this.scene.battle?.events(res.events);
 				const q = res.question;
-				f.note = res.correct
-					? ["打中啦！", "漂亮，打中了！", "太准了！", "又打倒一个！"][f.b.correct % 4]
-					: `哎呀，它冲过来了！刚才的答案是 ${q.answer}。${q.explanation ?? ""}`;
+				const e = res.enemy;
+				const slowed = res.events.some((x) => x.type === "pace" && !x.faster);
+				const faster = res.events.some((x) => x.type === "pace" && x.faster);
+				if (res.correct && e.state === "walking") {
+					f.note = e.kind === "boss" ? `打中哥布林大王了！还要再打 ${e.hp} 次！` : `打中投石车了！再来 ${e.hp} 次就能打倒它！`;
+					f.mood = "happy";
+				} else if (res.correct) {
+					f.note = e.kind === "boss" ? "哥布林大王被打倒啦！" : ["打中啦！", "漂亮，打中了！", "太准了！", "又打倒一个！"][f.b.correct % 4];
+					if (faster) f.note += "你答得又快又准，红方也加快速度了！";
+					f.mood = e.kind === "boss" ? "cheer" : "happy";
+				} else {
+					f.note = `哎呀，它冲过来了！刚才的答案是 ${q.answer}。${q.explanation ?? ""}`;
+					if (slowed && f.b.misses >= 2) f.note += "别着急，我让红方走慢一点。";
+					f.mood = "sad";
+				}
 				if (f.b.finished) return this.finishBattle();
 			}
 		} else if (k === "⌫") f.input = f.input.slice(0, -1);
@@ -216,6 +243,7 @@ export class App {
 					<div class="big">${icon(r.won ? "crown" : "wrong", "xl")}</div>
 					<h2>${r.won ? "守住啦！" : "这次没守住"}</h2>
 					<p>正确率 ${Math.round(r.accuracy * 100)}%${r.reviewed.length ? `，算作复习了 ${r.reviewed.length} 个知识点` : ""}。</p>
+					${f.reward ? `<p class="reward">村庄升级成城镇，围上了城墙！奖励：<b>${esc(f.reward)}</b>（放在广场旁边）</p>` : ""}
 				</div>
 				${weak}
 				<div class="action"><button class="btn primary" data-act="bstart">再打一次</button><button class="btn ghost" data-act="close">离开</button></div>`;
@@ -232,13 +260,15 @@ export class App {
 				<div class="prompt"><span class="text">${esc(t.question.prompt)}</span>${
 					"speechSynthesis" in window ? `<button class="speak" data-act="speak" title="读题">${icon("speaker")}</button>` : ""
 				}</div>
-				<p class="hint">答案就是走在最前面的骑士盾牌上的数</p>
+				<p class="hint">${
+					t.kind === "boss" ? "算出哥布林大王盾牌上的算式" : `答案就是走在最前面的${KIND[t.kind].name}盾牌上的数${t.hp > 1 ? `（还要打 ${t.hp} 次）` : ""}`
+				}</p>
 				<div class="entry">${f.input ? esc(f.input) : '<span class="placeholder">输入答案</span>'}</div>
 				${this.keypadHtml()}`;
 		}
 		const ready = villageReady(this.k, this.progress, i);
 		const chips = `<div class="chips"><span class="chip">${esc(v.unit)}</span><span class="chip">${v.plots.length} 块地</span>${
-			this.defense[i]?.won ? `<span class="chip">已守住 · 最好 ${Math.round(this.defense[i].best * 100)}%</span>` : ""
+			this.defense[i]?.won ? `<span class="chip">城镇 · 最好 ${Math.round(this.defense[i].best * 100)}%</span><span class="chip">${esc(rewardFor(i).name)}</span>` : ""
 		}</div>`;
 		if (!ready.ready) {
 			return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
@@ -246,7 +276,7 @@ export class App {
 				<div class="action">${leave}</div>`;
 		}
 		return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
-			<div class="action"><button class="btn warm" data-act="bstart">${icon("castle")}开始保卫战</button><p class="hint">三波红方骑士，冲进广场 ${MAX_THROUGH} 个就算没守住</p>${leave}</div>`;
+			<div class="action"><button class="btn warm" data-act="bstart">${icon("castle")}开始保卫战</button><p class="hint">三波红方：骑士、狼、投石车，最后是哥布林大王。冲进广场 ${MAX_THROUGH} 个就算没守住</p>${leave}</div>`;
 	}
 
 	private villageLine(): [string, Mood] {
@@ -258,22 +288,21 @@ export class App {
 		if (f?.result) {
 			const r = f.result;
 			return r.won
-				? [`我们守住${name}啦！正确率 ${Math.round(r.accuracy * 100)}%，你真是了不起的守护者！`, "cheer"]
+				? [`我们守住${name}啦！正确率 ${Math.round(r.accuracy * 100)}%，你真是了不起的守护者！${f.reward ? `村庄变成城镇了，还得到了一座${f.reward}！` : ""}`, "cheer"]
 				: ["这次没守住……没关系，看看哪几题错了，复习一下再来挑战！", "sad"];
 		}
 		if (f) {
 			if (f.paused) return ["先休息一下，准备好了就点继续。", "talk"];
 			const t = battleTarget(f.b);
-			const intro = f.note === "开始" ? "红方骑士要来抢旗子了！每个骑士的盾牌上都有一个数，算出答案，防御塔就会打中它。" : f.note;
-			const ask = t ? `最前面的骑士：${t.question.prompt}` : "";
-			const happy = f.note.startsWith("打中") || f.note.startsWith("漂亮") || f.note.startsWith("太准") || f.note.startsWith("又打");
-			return [`${intro}${ask ? (intro ? " " : "") + ask : ""}`, f.note.startsWith("哎呀") || f.note.startsWith("糟糕") ? "sad" : happy ? "happy" : "talk"];
+			const intro = f.note === "开始" ? "红方要来抢旗子了！每个敌人的盾牌上都有一个数，算出答案，防御塔就会打中它。" : f.note;
+			const ask = t ? (t.kind === "boss" ? t.question.prompt : `最前面的${KIND[t.kind].name}：${t.question.prompt}`) : "";
+			return [`${intro}${ask ? (intro ? " " : "") + ask : ""}`, f.mood];
 		}
 		const ready = villageReady(this.k, this.progress, i);
 		if (!ready.ready) {
 			return [`${name}还有 ${ready.missing.length} 块地不到 2 颗星。房子都盖好了，才能保卫村庄哦。`, "talk"];
 		}
-		if (this.defense[i]?.won) return [`${teacher.hello}${name}已经守住过啦！要不要再来一场练习战？`, "happy"];
+		if (this.defense[i]?.won) return [`${teacher.hello}${name}已经是城镇啦，你看那座${rewardFor(i).name}！要不要再来一场练习战？`, "happy"];
 		return [`${teacher.hello}${name}的房子都盖好啦！红方骑士要来抢旗子，我们一起保卫村庄吧！`, "talk"];
 	}
 

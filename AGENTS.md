@@ -6,7 +6,7 @@
 
 | 路径 | 内容 |
 | --- | --- |
-| `src/core/` | 纯逻辑，不依赖 three.js 和 DOM：`kingdom.ts`（先修索引、地块状态、演示进度）、`quiz.ts`（建造三步、复习、出题、更新进度）、`judge.ts`（判题）、`defense.ts`（保卫战：开打条件、波次、出题和盾牌数字不重复、命中、胜负和复习结算）、`variant.ts`（变式题：按 verify 算式换数字，规则见文件开头，`test/variant.test.ts` 对整个题库生成变式检查）、`save.ts`（存档）、`types.ts` |
+| `src/core/` | 纯逻辑，不依赖 three.js 和 DOM：`kingdom.ts`（先修索引、地块状态、演示进度）、`quiz.ts`（建造三步、复习、出题、更新进度）、`judge.ts`（判题）、`defense.ts`（保卫战：开打条件、骑士/狼/投石车/哥布林大王、波次、自适应速度、出题和盾牌数字不重复、命中、胜负、复习结算、城镇奖励）、`variant.ts`（变式题：按 verify 算式换数字，规则见文件开头，`test/variant.test.ts` 对整个题库生成变式检查）、`save.ts`（存档）、`types.ts` |
 | `src/scene/` | three.js：`assets.ts`（加载 `public/art/` 的模型和精灵，静态网格合并、动画零件单独保留，共用一个 palette 材质）、`world.ts`（岛、台地、王城、森林）、`buildings.ts`（建筑和装饰：有资源用模型，没有就用基本几何体拼，静态零件用 `bake` 合并）、`kingdom-scene.ts`（地块、迷雾、标签、拾取、镜头、动画） |
 | `src/scene/view.ts` | 两种视角共用的 `View` 接口；界面只通过它操作 3D 画面。有 `dialogue` 的视角（第一人称）把面板内容画在全息面板里、台词交给老师说 |
 | `src/scene/teachers.ts`、`src/ui/speech.ts` | 四位动物老师（按领域）和表情；朗读（语音合成） |

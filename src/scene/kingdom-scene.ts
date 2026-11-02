@@ -6,9 +6,10 @@ import { MapControls } from "three/addons/controls/MapControls.js";
 import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
 import type { KingdomData } from "../core/types";
-import type { Assets } from "./assets";
+import { rewardFor } from "../core/defense";
+import { type Assets, type ModelName, instantiate } from "./assets";
 import { labelCard } from "./label";
-import type { View } from "./view";
+import type { View, VillageMark } from "./view";
 import { createBubble, createBuilding, createGoblin, createOpenMarker, createWeeds, geo, mat } from "./buildings";
 import { BASE_H, COLORS, SCALE, createWorld, terraceHeight } from "./world";
 
@@ -77,6 +78,7 @@ export class KingdomScene implements View {
 	private container: HTMLElement;
 
 	private assets: Assets | null;
+	private towns = new THREE.Group(); // 村庄的旗子、城镇城墙和奖励装饰
 
 	constructor(container: HTMLElement, data: KingdomData, k: Kingdom, assets: Assets | null) {
 		this.assets = assets;
@@ -508,6 +510,74 @@ export class KingdomScene implements View {
 		this.labels.setSize(w, h);
 		this.camera.aspect = w / h;
 		this.applyViewOffset();
+	}
+
+	// 可以保卫的村庄插红旗；守住的变成城镇：金旗、沿村庄扇形边界的一圈矮墙（内侧中间留门）、广场旁的奖励装饰
+	villages(marks: VillageMark[]): void {
+		if (!this.towns.parent) this.scene.add(this.towns);
+		this.towns.traverse((o) => {
+			if (o instanceof THREE.Mesh && o.userData.own) o.geometry.dispose();
+		});
+		this.towns.clear();
+		const stones: THREE.Matrix4[] = [];
+		const dummy = new THREE.Object3D();
+		marks.forEach((m, i) => {
+			if (m === "none") return;
+			const v = this.data.villages[i];
+			const h = terraceHeight(v.grade);
+			const cx = v.x * SCALE;
+			const cz = v.y * SCALE;
+			// 旗杆和旗子，插在村庄广场边上
+			const pole = new THREE.Mesh(geo.cyl8, mat(0x7a5233));
+			pole.scale.set(0.035, 0.9, 0.035);
+			pole.position.set(cx + 0.18, h + 0.45, cz);
+			const flag = new THREE.Mesh(geo.box, mat(m === "ready" ? 0xe0463a : 0xf2c230));
+			flag.scale.set(0.3, 0.18, 0.02);
+			flag.position.set(cx + 0.34, h + 0.8, cz);
+			flag.userData.wave = true;
+			this.towns.add(pole, flag);
+			if (m !== "defended") return;
+			// 城墙：沿扇形边界放一排小石块
+			const ring = this.data.rings[v.grade - 1];
+			const pad = 8;
+			const r1 = (ring.r1 + pad) * SCALE;
+			const r2 = (ring.r2 - pad) * SCALE;
+			const amid = (v.a1 + v.a2) / 2;
+			const put = (r: number, a: number, along: number) => {
+				dummy.position.set(r * Math.cos(a), h + 0.07, r * Math.sin(a));
+				dummy.rotation.set(0, -along, 0);
+				dummy.scale.set(0.16, 0.14, 0.08);
+				dummy.updateMatrix();
+				stones.push(dummy.matrix.clone());
+			};
+			const arc = (r: number, gate: boolean) => {
+				const n = Math.max(3, Math.ceil(((v.a2 - v.a1) * r) / 0.14));
+				for (let j = 0; j <= n; j++) {
+					const a = v.a1 + ((v.a2 - v.a1) * j) / n;
+					if (gate && Math.abs(a - amid) * r < 0.22) continue;
+					put(r, a, a + Math.PI / 2);
+				}
+			};
+			arc(r2, false);
+			arc(r1, true);
+			for (const a of [v.a1, v.a2]) {
+				const n = Math.ceil((r2 - r1) / 0.14);
+				for (let j = 1; j < n; j++) put(r1 + ((r2 - r1) * j) / n, a, a);
+			}
+			// 奖励装饰
+			const reward = `deco_${rewardFor(i).id}` as ModelName;
+			const deco = this.assets?.models.has(reward) ? instantiate(this.assets, reward) : new THREE.Mesh(geo.cyl8, mat(0xf2c230));
+			if (deco instanceof THREE.Mesh) deco.scale.set(0.25, 0.3, 0.25);
+			else deco.scale.setScalar(1.1);
+			deco.position.set(cx - 0.32, h + (deco instanceof THREE.Mesh ? 0.15 : 0), cz + 0.05);
+			this.towns.add(deco);
+		});
+		if (stones.length) {
+			const walls = new THREE.InstancedMesh(geo.box, mat(0xb9b3a6), stones.length);
+			stones.forEach((m, j) => walls.setMatrixAt(j, m));
+			walls.userData.own = true;
+			this.towns.add(walls);
+		}
 	}
 
 	// ---- View 接口：界面通过这些方法操作地图视角 ----

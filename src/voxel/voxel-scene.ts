@@ -11,11 +11,11 @@ import type { KingdomData } from "../core/types";
 import { labelCard } from "../scene/label";
 import { type Mood, TEACHERS } from "../scene/teachers";
 import type { BattleView, Dialogue, View, VillageMark } from "../scene/view";
-import { type Battle, type BattleEvent, current as battleTarget } from "../core/defense";
+import { type Battle, type BattleEvent, type EnemyKind, current as battleTarget, rewardFor } from "../core/defense";
 import { speak, stopSpeaking } from "../ui/speech";
 import { type Atlas, createAtlas } from "./atlas";
 import { type Box, MeshBuilder, block } from "./mesher";
-import { type Part, type Structure, buildingStructure, castleStructure, goblinStructure, knightBoxes, openStructure, teacherBoxes, towerBoxes, treeBoxes, weedsStructure } from "./structures";
+import { type Part, type Structure, buildingStructure, castleStructure, catapultBoxes, decoBoxes, goblinKingBoxes, goblinStructure, knightBoxes, openStructure, teacherBoxes, towerBoxes, treeBoxes, weedsStructure, wolfBoxes } from "./structures";
 import { BASE, BLOCK, type Ground, type PlotCell, type TerrainData, attackPath, buildTerrain } from "./terrain";
 import { Player } from "./player";
 
@@ -101,6 +101,8 @@ export class VoxelScene implements View {
 	// ---- 保卫战 ----
 	private villageHits: THREE.Mesh[] = [];
 	private villageFlags = new THREE.Group();
+	// 城镇城墙占的格子 → 比地面高出多少（矮墙 0.6、墙柱 1，都能一步迈上去，不会把人困住）
+	private walls = new Map<number, number>();
 	private fight: {
 		b: Battle;
 		pts: THREE.Vector3[];
@@ -110,7 +112,7 @@ export class VoxelScene implements View {
 		enemies: Map<number, { mesh: THREE.Group; label: CSS2DObject; gone: number }>;
 		beams: { mesh: THREE.Mesh; age: number }[];
 	} | null = null;
-	private knightGeo: THREE.BufferGeometry | null = null;
+	private enemyGeo = new Map<EnemyKind, THREE.BufferGeometry>();
 	private hurt: HTMLElement;
 	// 竖屏保卫战：全息面板贴在屏幕底部，老师的台词是面板上方的横幅（3D 里放不下，会挡住路线）
 	private dock: HTMLElement;
@@ -233,7 +235,7 @@ export class VoxelScene implements View {
 		const key = this.terrain.key(x, z);
 		const col = this.terrain.columns.get(key);
 		if (!col || this.terrain.occupied.has(key) || this.solid.has(key)) return Infinity;
-		return col.h + 1;
+		return col.h + 1 + (this.walls.get(key) ?? 0);
 	}
 
 	private addTerrain(): void {
@@ -344,6 +346,7 @@ export class VoxelScene implements View {
 	villages(marks: VillageMark[]): void {
 		for (const c of this.villageFlags.children) (c as THREE.Mesh).geometry.dispose();
 		this.villageFlags.clear();
+		this.walls.clear();
 		const b = new MeshBuilder(this.atlas);
 		marks.forEach((m, i) => {
 			if (m === "none") return;
@@ -351,8 +354,67 @@ export class VoxelScene implements View {
 			const y = v.h + 2.4;
 			b.box({ min: [v.x + 0.46, y, v.z + 0.46], max: [v.x + 0.54, y + 1.1, v.z + 0.54], type: "log" });
 			b.box({ min: [v.x + 0.54, y + 0.6, v.z + 0.47], max: [v.x + 1.25, y + 1.05, v.z + 0.53], type: m === "ready" ? "wool_red" : "gold" });
+			if (m === "defended") this.buildTown(b, i);
 		});
 		if (!b.empty) this.villageFlags.add(new THREE.Mesh(b.build(), this.material));
+	}
+
+	// 城镇：沿村庄的扇形边界砌一圈矮石墙（避开建筑、小路、大道，内侧弧线中间留门），广场旁边放奖励装饰
+	private buildTown(b: MeshBuilder, index: number): void {
+		const t = this.terrain;
+		const v = t.villages[index];
+		const layout = this.data.villages[index];
+		const ring = this.data.rings[layout.grade - 1];
+		const pad = 6;
+		const inside = (x: number, z: number) => {
+			const r = Math.hypot(x + 0.5, z + 0.5) * BLOCK;
+			if (r < ring.r1 + pad || r > ring.r2 - pad) return false;
+			let a = Math.atan2(z + 0.5, x + 0.5);
+			while (a < layout.a1) a += Math.PI * 2;
+			while (a >= layout.a1 + Math.PI * 2) a -= Math.PI * 2;
+			return a <= layout.a2;
+		};
+		const amid = (layout.a1 + layout.a2) / 2;
+		const gate = [((ring.r1 + pad) / BLOCK) * Math.cos(amid), ((ring.r1 + pad) / BLOCK) * Math.sin(amid)];
+		const r2 = Math.ceil(((ring.r2 - ring.r1) / BLOCK) * 1.5 + 30);
+		for (let x = v.x - r2; x <= v.x + r2; x++) {
+			for (let z = v.z - r2; z <= v.z + r2; z++) {
+				if (!inside(x, z)) continue;
+				const edge = !inside(x + 1, z) || !inside(x - 1, z) || !inside(x, z + 1) || !inside(x, z - 1);
+				if (!edge) continue;
+				const k = t.key(x, z);
+				const col = t.columns.get(k);
+				if (!col || col.path || col.ground === "road" || t.occupied.has(k) || this.solid.has(k)) continue;
+				if (Math.hypot(x - gate[0], z - gate[1]) < 2.5) continue;
+				const post = (x + z) % 5 === 0;
+				if (post) {
+					b.box({ min: [x, col.h + 1, z], max: [x + 1, col.h + 1.85, z + 1], type: "cobble" });
+					b.box({ min: [x + 0.3, col.h + 1.85, z + 0.3], max: [x + 0.7, col.h + 2, z + 0.7], type: "glow" });
+				} else {
+					b.box({ min: [x, col.h + 1, z], max: [x + 1, col.h + 1.6, z + 1], type: "stone" });
+				}
+				this.walls.set(k, post ? 1 : 0.6);
+			}
+		}
+		// 奖励装饰：广场旁边找一块空地
+		const kind = rewardFor(index).id;
+		for (const [dx, dz] of [
+			[2, 0],
+			[-2, 0],
+			[0, 2],
+			[0, -2],
+			[2, 2],
+			[-2, -2],
+		]) {
+			const x = v.x + dx;
+			const z = v.z + dz;
+			const k = t.key(x, z);
+			const col = t.columns.get(k);
+			if (!col || t.occupied.has(k) || this.solid.has(k) || this.walls.has(k) || Math.abs(col.h - v.h) > 0) continue;
+			this.solid.add(k); // 装饰挡路
+			b.boxes(decoBoxes(kind), [x + 0.5, col.h + 1, z + 0.5]);
+			break;
+		}
 	}
 
 	private addPlots(): void {
@@ -930,10 +992,18 @@ export class VoxelScene implements View {
 		}
 		group.add(new THREE.Mesh(b2.build(), this.material));
 		this.scene.add(group);
-		if (!this.knightGeo) {
-			const kb = new MeshBuilder(this.atlas);
-			kb.boxes(knightBoxes());
-			this.knightGeo = kb.build();
+		if (!this.enemyGeo.size) {
+			const kinds: [EnemyKind, () => Box[]][] = [
+				["knight", knightBoxes],
+				["wolf", wolfBoxes],
+				["catapult", catapultBoxes],
+				["boss", goblinKingBoxes],
+			];
+			for (const [kind, boxes] of kinds) {
+				const kb = new MeshBuilder(this.atlas);
+				kb.boxes(boxes());
+				this.enemyGeo.set(kind, kb.build());
+			}
 		}
 		this.fight = { b, pts, lengths, towers, group, enemies: new Map(), beams: [] };
 		// 镜头换了位置，老师和全息面板重新摆
@@ -976,8 +1046,8 @@ export class VoxelScene implements View {
 		const f = this.fight;
 		if (!f) return;
 		for (const e of ev) {
-			if (e.type === "zap") {
-				const at = this.along(e.enemy.progress).pos.add(new THREE.Vector3(0, 0.8, 0));
+			if (e.type === "zap" || e.type === "hit") {
+				const at = this.along(e.enemy.progress).pos.add(new THREE.Vector3(0, e.enemy.kind === "boss" ? 1.4 : 0.8, 0));
 				const tower = f.towers.reduce((best, t) => (t.distanceTo(at) < best.distanceTo(at) ? t : best));
 				const len = tower.distanceTo(at);
 				const beam = new THREE.Mesh(
@@ -988,8 +1058,16 @@ export class VoxelScene implements View {
 				beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), at.clone().sub(tower).normalize());
 				f.group.add(beam);
 				f.beams.push({ mesh: beam, age: 0 });
-				this.burstAt(at, 0xffd23f, 50);
-				this.burstAt(at, 0xff7ad9, 30);
+				if (e.type === "zap") {
+					this.burstAt(at, 0xffd23f, e.enemy.kind === "boss" ? 120 : 50);
+					this.burstAt(at, 0xff7ad9, e.enemy.kind === "boss" ? 80 : 30);
+				} else {
+					// 打中了但没倒：闪一下，往后退
+					this.burstAt(at, 0x7ff6ff, 25);
+					const entry = f.enemies.get(e.enemy.id);
+					entry?.label.element.classList.add("hit");
+					setTimeout(() => entry?.label.element.classList.remove("hit"), 500);
+				}
 			} else if (e.type === "rush") {
 				const entry = f.enemies.get(e.enemy.id);
 				entry?.label.element.classList.add("rush");
@@ -1011,19 +1089,34 @@ export class VoxelScene implements View {
 			if (e.state === "waiting") continue;
 			if (!entry) {
 				const mesh = new THREE.Group();
-				mesh.add(new THREE.Mesh(this.knightGeo!, this.material));
+				mesh.add(new THREE.Mesh(this.enemyGeo.get(e.kind)!, this.material));
 				const el = document.createElement("div");
-				el.className = "label card shield";
+				el.className = `label card shield ${e.kind}`;
 				const label = new CSS2DObject(el);
 				label.center.set(0.5, 1);
-				label.position.set(0, 1.45, 0);
+				label.position.set(0, e.kind === "boss" ? 2.7 : e.kind === "wolf" ? 1.05 : e.kind === "catapult" ? 1.3 : 1.45, 0);
 				mesh.add(label);
 				f.group.add(mesh);
 				entry = { mesh, label, gone: 0 };
 				f.enemies.set(e.id, entry);
 			}
 			const el = entry.label.element;
-			if (el.textContent !== e.number) el.textContent = e.number;
+			// 盾牌：数字（大王是算式），要打几次的敌人下面加几颗心
+			const text = e.hp > 1 ? `${e.shield}\n${"♥".repeat(e.hp)}` : e.shield;
+			if (el.dataset.text !== text) {
+				el.dataset.text = text;
+				el.innerHTML = "";
+				const t = document.createElement("span");
+				t.className = "title";
+				t.textContent = e.shield;
+				el.appendChild(t);
+				if (e.hp > 1) {
+					const h = document.createElement("span");
+					h.className = "sub";
+					h.textContent = "♥".repeat(e.hp);
+					el.appendChild(h);
+				}
+			}
 			el.classList.toggle("target", target?.id === e.id);
 			if (e.state === "walking") {
 				const { pos, dir } = this.along(e.progress);

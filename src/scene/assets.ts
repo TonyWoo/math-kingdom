@@ -15,6 +15,8 @@ export const MODELS = [
 	"plaza_1", "plaza_2", "plaza_3",
 	"castle", "tree_pine", "tree_round", "tree_blossom", "village_plaza", "signpost",
 	"weeds", "goblin", "cloud", "bush", "rock_1", "rock_2",
+	// 保卫战守住后的城镇奖励装饰
+	"deco_fountain", "deco_statue", "deco_flowerbed", "deco_bench", "deco_lamp", "deco_well",
 ] as const;
 
 export type ModelName = (typeof MODELS)[number];

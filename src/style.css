@@ -1398,3 +1398,62 @@ body.fp-mode .legend {
 	color: #c07a12;
 	font-size: 12px;
 }
+
+/* 保卫战：不同敌人的盾牌 */
+.label.card.shield .sub {
+	font-size: 12px;
+	color: #ffd0d8;
+	opacity: 1;
+	letter-spacing: 1px;
+}
+
+.label.card.shield.target .sub {
+	color: #c0392b;
+}
+
+.label.card.shield.boss {
+	--card-bg: rgba(60, 120, 40, 0.95);
+	max-width: none;
+	white-space: nowrap;
+	font-size: 20px;
+	border-color: #ffd36a;
+}
+
+.label.card.shield.boss.target {
+	--card-bg: rgba(255, 196, 40, 0.97);
+}
+
+.label.card.shield.hit {
+	--card-bg: rgba(127, 246, 255, 0.95);
+	color: #003a44;
+}
+
+.holo-body .result .reward {
+	padding: 8px 12px;
+	border-radius: 10px;
+	background: rgba(255, 211, 106, 0.18);
+	color: #fff6dc;
+}
+
+/* 竖屏面板内容太多时可以滚动；结果页的大图标缩小 */
+.holo-dock {
+	overflow-y: auto;
+}
+
+.holo-dock .result {
+	padding: 4px 0;
+}
+
+.holo-dock .result .ic.xl {
+	width: 56px;
+	height: 56px;
+}
+
+.holo-dock .result h2 {
+	margin: 4px 0;
+	font-size: 20px;
+}
+
+.holo-dock .action .btn {
+	min-height: 44px;
+}

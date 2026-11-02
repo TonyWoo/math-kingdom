@@ -1,7 +1,8 @@
 // 保卫战规则：开打条件、出场和行走、答对答错、盾牌数字不重复、胜负和复习结算。
 import { describe, expect, it } from "vitest";
 import raw from "../src/data/kingdom.json";
-import { MAX_THROUGH, WAVES, accuracy, answer, canDefend, createBattle, current, settle, step, villageReady, walkSeconds } from "../src/core/defense";
+import { KIND, MAX_THROUGH, REWARDS, WAVES, accuracy, answer, bossQuestion, canDefend, createBattle, current, rewardFor, settle, step, villageReady, walkSeconds } from "../src/core/defense";
+import { judge } from "../src/core/judge";
 import { DAY, Kingdom, type Progress } from "../src/core/kingdom";
 import { parseNumbers } from "../src/core/judge";
 import type { KingdomData } from "../src/core/types";
@@ -38,7 +39,7 @@ describe("defense", () => {
 
 	it("骑士按时出场、往前走；场上盾牌数字互不相同", () => {
 		const b = createBattle(k, fullProgress(), village, seeded(1));
-		expect(b.enemies.length).toBe(WAVES[0]);
+		expect(b.enemies.length).toBe(WAVES[0].length);
 		for (let t = 0; t < 40; t++) {
 			step(b, 1);
 			const nums = b.enemies.filter((e) => e.state === "walking").map((e) => parseNumbers(e.number)![0]);
@@ -75,12 +76,13 @@ describe("defense", () => {
 		expect(win.finished).toBe(true);
 		expect(win.won).toBe(true);
 		expect(accuracy(win)).toBe(1);
-		expect(win.correct).toBe(WAVES.reduce((a, b) => a + b, 0));
+		// 每个敌人要打的次数加起来
+		expect(win.correct).toBe(WAVES.flat().reduce((n, kind) => n + KIND[kind].hp, 0));
 
 		const lose = createBattle(k, fullProgress(), village, seeded(4));
 		for (let i = 0; i < 2000 && !lose.finished; i++) step(lose, 0.5);
 		expect(lose.won).toBe(false);
-		expect(lose.through).toBe(MAX_THROUGH);
+		expect(lose.through).toBeGreaterThanOrEqual(MAX_THROUGH);
 	});
 
 	it("正确率够了算一次复习（推迟复习时间，不改星级）；不够就不算", () => {
@@ -108,5 +110,75 @@ describe("defense", () => {
 		expect(r2.reviewed).toEqual([]);
 		expect(r2.weak.length).toBeGreaterThan(0);
 		expect(p2[data.villages[village].plots[0]].due).toBe(NOW + DAY);
+	});
+
+	it("狼跑得快，投石车慢；投石车要打 2 次，大王 3 次", () => {
+		expect(KIND.wolf.slow).toBeLessThan(KIND.knight.slow);
+		expect(KIND.catapult.slow).toBeGreaterThan(KIND.knight.slow);
+		const b = createBattle(k, fullProgress(), village, seeded(8));
+		// 快进到最后一波，只留投石车
+		const all: number[] = [];
+		for (let i = 0; i < 4000 && !b.finished; i++) {
+			step(b, 0.5);
+			const t = current(b);
+			if (!t) continue;
+			if (t.kind === "catapult" || t.kind === "boss") {
+				const hp = t.hp;
+				const before = t.number;
+				const r = answer(b, t.number)!;
+				if (hp > 1) {
+					expect(r.events.some((e) => e.type === "hit")).toBe(true);
+					expect(t.state).toBe("walking");
+					expect(t.hp).toBe(hp - 1);
+					expect(t.number).not.toBe(before);
+				} else {
+					expect(t.state).toBe("zapped");
+				}
+				all.push(t.id);
+			} else {
+				answer(b, t.number);
+			}
+		}
+		expect(b.won).toBe(true);
+		expect(b.enemies.filter((e) => e.kind === "boss").length).toBe(1);
+	});
+
+	it("大王的两步算式：答案对，盾牌上写的是算式", () => {
+		const rng = seeded(9);
+		for (const grade of [1, 2, 3, 4, 5, 6]) {
+			for (let i = 0; i < 50; i++) {
+				const q = bossQuestion(grade, rng);
+				const expr = q.id.slice(5).replace(/＋/g, "+").replace(/－/g, "-").replace(/×/g, "*");
+				// 只有数字、运算符、括号和空格，可以安全地算一遍
+				expect(expr).toMatch(/^[\d\s+\-*()]+$/);
+				const value = Function(`return (${expr})`)() as number;
+				expect(Number(q.answer)).toBe(value);
+				expect(value).toBeGreaterThan(0);
+				expect(judge(q, q.answer)).toBe(true);
+				if (grade === 1) expect(value).toBeLessThanOrEqual(20);
+			}
+		}
+	});
+
+	it("自适应：连对变快，答错变慢，有上下限", () => {
+		const b = createBattle(k, fullProgress(), village, seeded(10));
+		for (let i = 0; i < 400 && b.correct < 6; i++) {
+			step(b, 0.5);
+			const t = current(b);
+			if (t) answer(b, t.number);
+		}
+		expect(b.pace).toBeGreaterThan(1);
+		expect(b.pace).toBeLessThanOrEqual(1.35);
+		for (let i = 0; i < 400 && !b.finished && b.misses < 6; i++) {
+			step(b, 0.5);
+			if (current(b)) answer(b, "999999");
+		}
+		expect(b.pace).toBeGreaterThanOrEqual(0.6);
+		expect(b.pace).toBeLessThan(1);
+	});
+
+	it("奖励按村庄轮流", () => {
+		expect(rewardFor(0)).toBe(REWARDS[0]);
+		expect(rewardFor(REWARDS.length + 1)).toBe(REWARDS[1]);
 	});
 });
