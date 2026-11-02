@@ -44,10 +44,26 @@ export function parseNumbers(input: string): number[] | null {
 	return out;
 }
 
+// 短答题的文本比对：全角转半角（normalize 已做）、英文字母不分大小写、
+// 空白折叠、末尾标点不算；标准答案和 accept 里的任一写法对上都算对。
+export function normalizeText(input: string): string {
+	return normalize(input)
+		.replace(/\s+/g, " ")
+		.replace(/[。．.！!？?；;：:、，,\s]+$/u, "")
+		.toLowerCase();
+}
+
+export function judgeText(q: Question, input: string): boolean {
+	const got = normalizeText(input);
+	if (!got) return false;
+	return [q.answer, ...(q.accept ?? [])].some((a) => normalizeText(a) === got);
+}
+
 export function judge(q: Question, input: string): boolean {
 	if (q.kind === "choice") {
 		return normalize(input).toUpperCase() === q.answer.trim().toUpperCase();
 	}
+	if (q.kind !== "numeric") return judgeText(q, input);
 	const want = parseNumbers(q.answer);
 	const got = parseNumbers(input);
 	if (!want || !got || want.length !== got.length) return false;

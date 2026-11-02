@@ -7,9 +7,9 @@ import * as THREE from "three";
 import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { CSS3DObject, CSS3DRenderer } from "three/addons/renderers/CSS3DRenderer.js";
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
-import type { KingdomData } from "../core/types";
+import { ringOf, type KingdomData } from "../core/types";
 import { labelCard } from "../scene/label";
-import { type Mood, TEACHERS } from "../scene/teachers";
+import { type Mood, teacherOf } from "../scene/teachers";
 import type { BattleView, Dialogue, Spot, View, VillageMark } from "../scene/view";
 import { type Battle, type BattleEvent, type EnemyKind, current as battleTarget, rewardFor } from "../core/defense";
 import { speak, stopSpeaking } from "../ui/speech";
@@ -364,7 +364,7 @@ export class VoxelScene implements View {
 		const t = this.terrain;
 		const v = t.villages[index];
 		const layout = this.data.villages[index];
-		const ring = this.data.rings[layout.grade - 1];
+		const ring = ringOf(this.data, layout.grade);
 		const pad = 6;
 		const inside = (x: number, z: number) => {
 			const r = Math.hypot(x + 0.5, z + 0.5) * BLOCK;
@@ -641,7 +641,7 @@ export class VoxelScene implements View {
 
 	// 年级圈里数与代数扇区正中的环路上，面朝外
 	focusGrade(grade: number): void {
-		const ring = this.data.rings[grade - 1];
+		const ring = ringOf(this.data, grade);
 		const s = this.data.sectors[0];
 		const a = (s.a1 + s.a2) / 2;
 		const r = (ring.r1 - 35) / BLOCK;
@@ -818,7 +818,7 @@ export class VoxelScene implements View {
 
 	// 对话开始：老师站在玩家面前偏左的地上，全息面板浮在偏右（竖屏时在下方），都朝着玩家
 	private startDialogue(): void {
-		const t = TEACHERS[this.domainOf(this.selectedId!)];
+		const t = teacherOf(this.domainOf(this.selectedId!));
 		this.holoName.textContent = `${t.name}的全息面板`;
 		const yaw = this.player.yaw;
 		const battle = this.fight !== null;
@@ -938,7 +938,7 @@ export class VoxelScene implements View {
 		const el = this.speech.element;
 		el.innerHTML = "";
 		const who = document.createElement("b");
-		who.textContent = this.selectedId ? TEACHERS[this.domainOf(this.selectedId)].name : "";
+		who.textContent = this.selectedId ? teacherOf(this.domainOf(this.selectedId)).name : "";
 		const line = document.createElement("span");
 		line.textContent = text;
 		el.append(who, line);

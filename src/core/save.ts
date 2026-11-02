@@ -2,7 +2,13 @@
 
 import type { Progress } from "./kingdom";
 
-const KEY = "math-kingdom/v1";
+let KEY = "math-kingdom/v1";
+
+// 进度按学科分开存：数学沿用原来的键（老存档不丢），其他学科各带学科后缀。
+// 主入口加载完学科数据后、建 App 之前调用一次。
+export function useSubject(subject: string): void {
+	KEY = subject === "math" ? "math-kingdom/v1" : `math-kingdom/v1/${subject}`;
+}
 
 export interface SaveData {
 	progress: Progress;

@@ -1,8 +1,10 @@
-// 数据类型：src/data/kingdom.json 的结构（scripts/import-taxonomy.mjs 生成）。
+// 数据类型：每科一份数据文件的结构（scripts/split-subjects.mjs 按学科生成，
+// public/data/<学科>.json；数学另有一份 src/data/kingdom.json 供测试用）。
+// 领域和知识点类型是数据里的字符串，不写死某个学科的词表，这样一套程序能装所有学科。
 // 布局坐标：王城在原点，x 向右、y 向下（场景里 y 对应 three.js 的 z），角度是弧度。
 
-export type Domain = "数与代数" | "图形与几何" | "统计与概率" | "综合与实践";
-export type TopicType = "procedural" | "conceptual" | "reasoning" | "application" | "modeling";
+export type Domain = string;
+export type TopicType = string;
 export type Building = "mill" | "library" | "watchtower" | "market" | "plaza";
 export type Terrain = "plain" | "hill" | "coast" | "fair";
 export type Difficulty = "basic" | "standard" | "challenge";
@@ -26,12 +28,13 @@ export interface Topic {
 export interface Question {
 	id: string;
 	difficulty: Difficulty;
-	kind: "numeric" | "choice";
+	kind: "numeric" | "choice" | "short" | "self";
 	prompt: string;
 	answer: string;
-	choices?: { key: string; text: string }[];
+	choices?: { key: string; text: string; figure?: string }[]; // figure 是原库给选项配的图（SVG），先透传，界面暂未渲染
+	accept?: string[]; // 短答题的其他可接受答案（原库字段）
 	explanation?: string;
-	verify?: string; // 标准答案的四则运算算式（只有填数题有），变式题靠它换数字
+	verify?: string; // 原库的核验式：填数题是四则运算算式（变式题靠它换数字），其他题型可能是文字，变式题会自己筛
 	variantOf?: string; // 变式题：原题的 id
 }
 
@@ -68,6 +71,7 @@ export interface Village {
 }
 
 export interface KingdomData {
+	subject?: { id: string; name: string; kingdom: string }; // 拆分脚本写入的学科信息；旧 kingdom.json 没有这一段
 	source: { repo: string; commit: string; license: string; note: string };
 	castle: { r: number };
 	sectors: Sector[];
@@ -76,4 +80,9 @@ export interface KingdomData {
 	topics: Topic[];
 	edges: Edge[];
 	questions: Record<string, Question[]>;
+}
+
+// 年级圈按年级值查：不是每个学科都从一年级开始（英语从三年级），不能拿年级当下标
+export function ringOf(data: KingdomData, grade: number): Ring {
+	return data.rings.find((r) => r.grade === grade)!;
 }

@@ -12,8 +12,9 @@
 | `src/scene/teachers.ts`、`src/ui/speech.ts` | 四位动物老师（按领域）和表情；朗读（语音合成） |
 | `src/voxel/` | 第一人称方块世界：`terrain.ts`（纯逻辑：布局换算成方块网格、高度、地块和小路，`test/voxel.test.ts` 测可走性）、`atlas.ts`（代码画的像素贴图集）、`mesher.ts`（方块拼网格、方块种类）、`structures.ts`（建筑、王城、树、哥布林的方块图纸）、`player.ts`（第一人称移动和碰撞，键鼠和触摸）、`voxel-scene.ts`（场景，实现 `View`、对话和保卫战）。`terrain.ts` 的 `attackPath` 算保卫战的进攻路线，测试检查每个村庄都有 |
 | `src/ui/app.ts` | HTML 界面：顶栏、年级按钮、详情面板、答题键盘、朗读、设置；持有进度，`setView` 切换视角 |
-| `src/data/kingdom.json` | 生成文件（`npm run import`），不要手改 |
-| `scripts/import-taxonomy.mjs` | 导入上游数据并计算地图布局 |
+| `src/data/kingdom.json`、`public/data/*.json` | 生成文件（`npm run split` / `npm run import`），不要手改 |
+| `scripts/import-taxonomy.mjs` | 导入上游数据并计算地图布局（旧管线，只出数学） |
+| `scripts/sync-taxonomy.mjs`、`scripts/split-subjects.mjs`、`scripts/subjects.json` | 同步原库、按学科拆分数据（原字段全量透传）；学科与年级范围在 subjects.json 里配 |
 | `test/` | Vitest 单元测试，只测 `src/core/` 和数据 |
 | `public/art/`、`public/icons/` | 运行时加载的美术资源（CC0）。`art/math-kingdom-art-v1/` 是原始交付包的说明、自检、预览和备用文件，不会被打包 |
 | `docs/art-prompt.md`、`docs/art-reference/` | 给 AI 生成工具的美术资源提示词和参考截图；模型规格（尺寸、原点、朝向、共用 `palette` 材质、动画节点名）以它为准 |
@@ -31,7 +32,7 @@ npm run import -- <cn-math-taxonomy clone>   # 重新生成数据和布局
 ## 规则
 
 1. **`src/core/` 保持纯逻辑**：不 import three.js、不碰 DOM、不读 `Date.now()`（时间由调用方传入），这样能单元测试，以后服务端也能复用。
-2. **`kingdom.json` 只通过导入脚本生成**。改布局就改脚本里的常量后重新生成，并检查已有地块的位置变化（玩家会记得自己的房子在哪里）。
+2. **数据文件只通过脚本生成**（`split-subjects.mjs` / `import-taxonomy.mjs`）。改布局就改脚本里的常量后重新生成，并检查已有地块的位置变化（玩家会记得自己的房子在哪里）。
 3. **数据许可证是 CC BY-NC 4.0**，代码是 MIT。不要删掉 README、设置对话框和 LICENSE 里的署名和非商业说明。
 4. **星级永远不扣**：没复习只改变画面（问号、长草、哥布林），不减星。
 5. **性能**：目标是普通平板 60 帧。模型都用 `assets.material` 这一个材质；会动的零件（模型里的 `blades`、`flag`、`pennant`）在 `assets.ts` 里转成 `userData.spin / wave`。大量重复的东西（树、村庄广场、迷雾）用 `InstancedMesh`。程序化的后备建筑用 `part()` 加零件、最后 `bake()` 合并。

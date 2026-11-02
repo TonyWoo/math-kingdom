@@ -186,6 +186,8 @@ function planFor(question: Question, topicName: string): Plan | null {
 
 function makePlan(question: Question, topicName: string): Plan | null {
 	if (question.kind !== "numeric" || !question.verify) return null;
+	// 数据全量透传后 verify 可能是文字核验式；只有纯四则运算算式才换数字（和旧导入的筛选一致）
+	if (!/^[\d\s.+\-*/()]+$/.test(question.verify)) return null;
 	if (RISKY.test(question.prompt) || RISKY.test(topicName.replace(/[a-zA-Z]/g, ""))) return null;
 	const tree = parse(question.verify);
 	const inPrompt = new Set(question.prompt.match(NUMBER) ?? []);

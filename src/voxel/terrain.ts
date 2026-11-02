@@ -6,7 +6,7 @@
 //   年级 g 外侧的环路和 g 同高；放射大道和所在的台地或环路同高。
 // 相邻的路面和台地最多差 1 格，所以玩家能从王城一路走到最外圈（test/voxel.test.ts 会检查）。
 
-import type { KingdomData, Terrain } from "../core/types";
+import { ringOf, type KingdomData, type Terrain } from "../core/types";
 
 export const BLOCK = 20;
 export const BASE = 2;
@@ -182,7 +182,7 @@ export function walkable(t: TerrainData, x: number, z: number): boolean {
 export function attackPath(t: TerrainData, village: number, data: KingdomData, blocked?: Set<number>): [number, number][] | null {
 	const v = t.villages[village];
 	const layout = data.villages[village];
-	const ring = data.rings[layout.grade - 1];
+	const ring = ringOf(data, layout.grade);
 	const a = Math.atan2(layout.y, layout.x);
 	const r = (ring.r2 + 35) / BLOCK;
 	const start: [number, number] = [Math.round(r * Math.cos(a)), Math.round(r * Math.sin(a))];

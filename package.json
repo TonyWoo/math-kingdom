@@ -9,7 +9,9 @@
 		"build": "tsc --noEmit && vite build",
 		"preview": "vite preview",
 		"test": "vitest run",
-		"import": "node scripts/import-taxonomy.mjs"
+		"import": "node scripts/import-taxonomy.mjs",
+		"sync": "node scripts/sync-taxonomy.mjs",
+		"split": "node scripts/split-subjects.mjs"
 	},
 	"license": "MIT",
 	"dependencies": {

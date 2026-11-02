@@ -13,7 +13,7 @@ import { type Outcome, type Plan, QuizSession, planFor } from "../core/quiz";
 import * as save from "../core/save";
 import { type Battle, type BattleResult, KIND, MAX_THROUGH, WAVES, rewardFor, answer as battleAnswer, canDefend, createBattle, current as battleTarget, settle, step as battleStep, villageReady } from "../core/defense";
 import type { Question } from "../core/types";
-import { type Mood, TEACHERS } from "../scene/teachers";
+import { type Mood, teacherOf } from "../scene/teachers";
 import type { Spot, View } from "../scene/view";
 import { speak as say, stopSpeaking } from "./speech";
 import { music } from "./music";
@@ -88,7 +88,7 @@ export class App {
 			scene.focusPlot(select, true);
 			this.open(select, false);
 			this.moveSpot(this.spotNear(select));
-		} else if (focus >= 1 && focus <= 6) {
+		} else if (focus >= 1 && focus <= 6 && k.data.rings.some((r) => r.grade === focus)) {
 			scene.focusGrade(focus, true);
 			if (this.spot) scene.setSpot?.(this.spot); // 小人还在原来的地方，镜头听网址的
 		} else {
@@ -168,6 +168,7 @@ export class App {
 
 	private startBattle(): void {
 		if (this.village === null) return;
+		if (!canDefend(this.k, this.progress, this.village)) return;
 		const b = createBattle(this.k, this.progress, this.village);
 		this.fight = { b, paused: false, input: "", note: "开始", mood: "talk" };
 		this.scene.battle?.start(b);
@@ -306,6 +307,12 @@ export class App {
 				<h3>还没到 2 颗星的地</h3>${ready.missing.map((id) => `<button class="prereq" data-go="${id}"><span class="tag no">${stars(this.progress, id)} 星</span>${esc(this.k.topic(id).name)}</button>`).join("")}
 				<div class="action">${leave}</div>`;
 		}
+		// 保卫战靠填数题出题（盾牌上是数字）；没有填数题的村庄（比如纯选择题的学科）不开打
+		if (!canDefend(this.k, this.progress, i)) {
+			return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
+				<p class="hint">这个村庄全是星星了。保卫战要用填数题出题，这个村庄没有合适的题，就先安安稳稳住着吧。</p>
+				<div class="action">${leave}</div>`;
+		}
 		return `<button class="close" data-act="close" aria-label="离开">×</button><h2>${esc(v.name)}</h2>${chips}
 			<div class="action"><button class="btn warm" data-act="bstart">${icon("castle")}开始保卫战</button><p class="hint">三波红方：骑士、狼、投石车，最后是哥布林大王。冲进广场 ${MAX_THROUGH} 个就算没守住</p>${leave}</div>`;
 	}
@@ -313,7 +320,7 @@ export class App {
 	private villageLine(): [string, Mood] {
 		const i = this.village!;
 		const v = this.k.data.villages[i];
-		const teacher = TEACHERS[v.domain];
+		const teacher = teacherOf(v.domain);
 		const name = `「${v.name}」`;
 		const f = this.fight;
 		if (f?.result) {
@@ -378,13 +385,14 @@ export class App {
 
 	private setupChrome(): void {
 		const grades = $("grades");
-		GRADE_NAME.forEach((name, i) => {
+		// 年级按钮按数据里实际有的年级圈建：英语从三年级起，就只有三到六年级的按钮
+		for (const ring of this.k.data.rings) {
 			const b = document.createElement("button");
 			b.className = "btn";
-			b.textContent = name;
-			b.onclick = () => this.scene.focusGrade(i + 1);
+			b.textContent = GRADE_NAME[ring.grade - 1] ?? `${ring.grade}年级`;
+			b.onclick = () => this.scene.focusGrade(ring.grade);
 			grades.appendChild(b);
-		});
+		}
 		$("home").onclick = () => this.scene.goHome();
 		$("view").onclick = () => {
 			const s = this.scene as View & { toggleTopDown?: () => boolean };
@@ -574,7 +582,7 @@ export class App {
 	private teacherLine(): [string, Mood] {
 		const id = this.selected!;
 		const t = this.k.topic(id);
-		const teacher = TEACHERS[t.domain];
+		const teacher = teacherOf(t.domain);
 		const name = `「${t.name}」`;
 		const q = this.quiz;
 		if (!q) {
@@ -634,6 +642,9 @@ export class App {
 			panel.innerHTML = this.topicHtml();
 		}
 		this.bindPanel();
+		// 短答题的输入框：面板一出来就聚焦，省一次点按
+		const ti = panel.querySelector<HTMLInputElement>("#text-answer");
+		if (ti && this.quiz && !this.quiz.answered) ti.focus();
 		this.scene.panelChanged(true);
 		this.updateInset();
 	}
@@ -720,6 +731,11 @@ export class App {
 			case "choose":
 				this.submit(arg!);
 				break;
+			case "tsubmit": {
+				const input = $<HTMLInputElement>("text-answer");
+				if (input?.value.trim()) this.submit(input.value);
+				break;
+			}
 			case "next":
 				this.next();
 				break;
@@ -786,7 +802,7 @@ export class App {
 					return `<button class="btn ${cls}" data-act="choose" data-arg="${esc(c.key)}" ${q.answered ? "disabled" : ""}><b>${esc(c.key)}</b>${esc(c.text)}</button>`;
 				})
 				.join("")}</div>`;
-		} else {
+		} else if (question.kind === "numeric") {
 			const ok = q.answered ? s.results.at(-1) : undefined;
 			const hint =
 				answerCount(question) > 1
@@ -798,6 +814,12 @@ export class App {
 				q.input ? esc(q.input) : `<span class="placeholder">${hint}</span>`
 			}</div>`;
 			if (!q.answered) body += this.keypadHtml();
+		} else {
+			// 短答题：直接打字输入（拼写、写词语这类），判题走 judge 的文本比对
+			const ok = q.answered ? s.results.at(-1) : undefined;
+			body += `<div class="text-answer ${ok === true ? "right" : ok === false ? "wrong" : ""}"><input id="text-answer" type="text" placeholder="把答案写在这里" autocomplete="off" ${q.answered ? "disabled" : ""} value="${esc(q.answered ? (q.picked ?? "") : q.input)}" />${
+				q.answered ? "" : '<button class="btn primary" data-act="tsubmit">确定</button>'
+			}</div>`;
 		}
 		if (q.answered) body += this.feedbackHtml(question, s.results.at(-1)!);
 		return body + "</div>";
@@ -952,6 +974,15 @@ export class App {
 			return;
 		}
 		if (q && !q.outcome) {
+			// 焦点在短答输入框里时，打字归输入框自己管，只有回车是提交
+			if (e.target instanceof HTMLInputElement && !q.answered) {
+				if (e.key === "Enter") {
+					const v = e.target.value;
+					if (v.trim()) this.submit(v);
+					e.preventDefault();
+				}
+				return;
+			}
 			const question = q.session.current;
 			if (q.answered) {
 				if (e.key === "Enter" || e.key === " ") this.next();
@@ -969,7 +1000,7 @@ export class App {
 			return;
 		}
 		if (e.key === "Escape") this.close();
-		if (!q && /^[1-6]$/.test(e.key)) this.scene.focusGrade(Number(e.key));
+		if (!q && /^[1-6]$/.test(e.key) && this.k.data.rings.some((r) => r.grade === Number(e.key))) this.scene.focusGrade(Number(e.key));
 	}
 
 	toast(msg: string, ms = 3000): void {

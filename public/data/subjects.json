@@ -1,0 +1,77 @@
+{
+	"subjects": [
+		{
+			"id": "chinese",
+			"name": "语文",
+			"kingdom": "语文王国",
+			"topics": 493,
+			"questions": 1972,
+			"grades": [
+				1,
+				2,
+				3,
+				4,
+				5,
+				6
+			]
+		},
+		{
+			"id": "english",
+			"name": "英语",
+			"kingdom": "英语王国",
+			"topics": 275,
+			"questions": 1100,
+			"grades": [
+				3,
+				4,
+				5,
+				6
+			]
+		},
+		{
+			"id": "math",
+			"name": "数学",
+			"kingdom": "数学王国",
+			"topics": 284,
+			"questions": 1136,
+			"grades": [
+				1,
+				2,
+				3,
+				4,
+				5,
+				6
+			]
+		},
+		{
+			"id": "morality",
+			"name": "道德与法治",
+			"kingdom": "品德王国",
+			"topics": 159,
+			"questions": 636,
+			"grades": [
+				1,
+				2,
+				3,
+				4,
+				5,
+				6
+			]
+		},
+		{
+			"id": "science",
+			"name": "科学",
+			"kingdom": "科学王国",
+			"topics": 222,
+			"questions": 888,
+			"grades": [
+				1,
+				2,
+				3,
+				4,
+				5,
+				6
+			]
+		}
+	]
+}

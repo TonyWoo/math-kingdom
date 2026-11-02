@@ -44,13 +44,13 @@ npm run build      # 打包到 dist/，是纯静态网站
 
 ## 数据
 
-知识点、先修关系和题目来自 [cn-math-taxonomy](https://github.com/xiaoyang111222/cn-math-taxonomy)，只取了小学数学部分：284 个知识点、459 条先修边、1136 道题（每个知识点 2 道基础题、1 道标准题、1 道挑战题）。**这些内容由 AI 生成，原作者说明尚未经过教师审核。**
+知识点、先修关系和题目来自 [cn-math-taxonomy](https://github.com/xiaoyang111222/cn-math-taxonomy)。同一套程序现在能装多个学科（顶栏切换，进度按学科分开存），已接入小学五科：数学 284 个知识点 / 1136 道题、语文 493 / 1972、英语 275 / 1100、科学 222 / 888、道德与法治 159 / 636（每个知识点 4 道题）。前端按学科加载：每科一份 `public/data/<学科>.json`，另有一份索引 `public/data/subjects.json`；进哪科只下哪科。拆分时原库字段全量透传（连现在玩法还没用到的诊断题、课标条目都带着），以后扩初高中或加学科，改 `scripts/subjects.json` 的配置重新拆分即可。保卫战靠填数题出题，没有填数题的村庄不开保卫战。**这些内容由 AI 生成，原作者说明尚未经过教师审核。**
 
 更新数据：
 
 ```bash
-git clone --depth 1 https://github.com/xiaoyang111222/cn-math-taxonomy ../cn-math-taxonomy
-npm run import -- ../cn-math-taxonomy     # 重新生成 src/data/kingdom.json（含地图布局）
+npm run sync                              # 同步原库到 ../cn-math-taxonomy（克隆或拉最新）
+npm run split -- ../cn-math-taxonomy      # 按学科拆分到 public/data/，并刷新 src/data/kingdom.json（含地图布局）
 npm test
 ```
 
@@ -63,7 +63,7 @@ npm test
 - 代码：MIT，见 [LICENSE](LICENSE)。
 - 美术资源（`public/art/`、`public/icons/`、`art/`）：CC0 1.0，见 [art/math-kingdom-art-v1/LICENSE.txt](art/math-kingdom-art-v1/LICENSE.txt)。
 - 音乐（`public/audio/`）：CC0 1.0，出处见 [public/audio/CREDITS.md](public/audio/CREDITS.md)。
-- `src/data/kingdom.json`：来自 cn-math-taxonomy，按 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans) 许可（署名、非商业使用）。**包含这份数据的网站不能用于商业用途**；要商用请联系原作者另外授权。
+- 数据文件（`public/data/*.json`、`src/data/kingdom.json`）：来自 cn-math-taxonomy，按 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans) 许可（署名、非商业使用）。**包含这份数据的网站不能用于商业用途**；要商用请联系原作者另外授权。
 
 设计说明见 [docs/design.md](docs/design.md)。
 
@@ -96,6 +96,9 @@ npm install && npm run dev
 
 Code is MIT. The 3D models, textures and icons in `public/art/` and `public/icons/` are CC0 (AI-generated to the spec
 in `docs/art-prompt.md`; the game falls back to procedural buildings if they fail to load). The music in
-`public/audio/` is CC0 too (credits in `public/audio/CREDITS.md`). The knowledge graph and questions in `src/data/kingdom.json` come from
+`public/audio/` is CC0 too (credits in `public/audio/CREDITS.md`). The knowledge graphs and questions in
+`public/data/*.json` and `src/data/kingdom.json` come from
 [cn-math-taxonomy](https://github.com/xiaoyang111222/cn-math-taxonomy) under **CC BY-NC 4.0** (non-commercial); its
-author notes they are AI-generated and not yet reviewed by teachers.
+author notes they are AI-generated and not yet reviewed by teachers. One program now serves several primary-school
+subjects (math, Chinese, English, science and morality): `npm run sync` pulls the upstream repo and
+`npm run split` turns it into one data file per subject, which the game loads on demand; progress is saved per subject.

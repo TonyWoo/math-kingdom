@@ -555,6 +555,61 @@ body.fp-mode .label.plot {
 	font-weight: 400;
 }
 
+/* 顶栏的学科切换：样子跟顶栏按钮靠拢，深底白字 */
+.subject-select {
+	height: 42px;
+	padding: 0 10px;
+	border: none;
+	border-radius: 10px;
+	background: rgba(255, 255, 255, 0.14);
+	color: #fff;
+	font-size: 16px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.subject-select option {
+	color: var(--ink);
+}
+
+/* 短答题的文字输入行：输入框 + 确定按钮 */
+.text-answer {
+	display: flex;
+	gap: 10px;
+	margin-top: 14px;
+}
+
+.text-answer input {
+	flex: 1;
+	min-width: 0;
+	min-height: 60px;
+	padding: 10px 16px;
+	border: none;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: inset 0 0 0 3px var(--gold);
+	font-size: 24px;
+	font-weight: 700;
+	color: var(--ink);
+	text-align: center;
+	outline: none;
+}
+
+.text-answer.right input {
+	box-shadow: inset 0 0 0 3px var(--green);
+	background: #ecf8ec;
+}
+
+.text-answer.wrong input {
+	box-shadow: inset 0 0 0 3px var(--red);
+	background: #fdecea;
+}
+
+.text-answer .btn {
+	min-width: 96px;
+	font-size: 20px;
+}
+
 .entry.right {
 	box-shadow: inset 0 0 0 3px var(--green);
 	background: #ecf8ec;

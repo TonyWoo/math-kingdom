@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
 import { CSS2DObject, CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 import { type Kingdom, type Progress, type Status, stars as starsOf, status as statusOf } from "../core/kingdom";
-import type { KingdomData } from "../core/types";
+import { ringOf, type KingdomData } from "../core/types";
 import { rewardFor } from "../core/defense";
 import { type Assets, type ModelName, instantiate } from "./assets";
 import { labelCard } from "./label";
@@ -145,7 +145,7 @@ export class KingdomScene implements View {
 
 	// 年级圈在数与代数扇区正中的位置
 	gradePosition(grade: number): THREE.Vector3 {
-		const ring = this.data.rings[grade - 1];
+		const ring = ringOf(this.data, grade);
 		const s = this.data.sectors[0];
 		const a = (s.a1 + s.a2) / 2;
 		const r = ((ring.r1 + ring.r2) / 2) * SCALE;
@@ -160,7 +160,7 @@ export class KingdomScene implements View {
 			const h = terraceHeight(v.grade) + 0.012;
 			const center = new THREE.Vector3(v.x * S, h, v.y * S);
 			// 村口：沿半径往里接到环路上（是一段坡道）
-			const ring = this.data.rings[v.grade - 1];
+			const ring = ringOf(this.data, v.grade);
 			const a = Math.atan2(v.y, v.x);
 			const rr = ring.r1 * S - 0.3;
 			segs.push([new THREE.Vector3(rr * Math.cos(a), BASE_H + 0.01, rr * Math.sin(a)), center, 0.16]);
@@ -264,7 +264,7 @@ export class KingdomScene implements View {
 			const label = new CSS2DObject(labelCard("village", v.name, v.unit));
 			label.center.set(0.5, 1);
 			// 名牌放在村庄外侧（远离王城的一边）
-			const ring = this.data.rings[v.grade - 1];
+			const ring = ringOf(this.data, v.grade);
 			const a = Math.atan2(v.y, v.x);
 			const r = (ring.r2 + 25) * SCALE;
 			label.position.set(r * Math.cos(a), terraceHeight(v.grade) + 0.1, r * Math.sin(a));
@@ -281,10 +281,10 @@ export class KingdomScene implements View {
 				avenue = s.a1;
 			}
 		}
-		this.data.rings.forEach((ring, i) => {
+		this.data.rings.forEach((ring) => {
 			const el = document.createElement("div");
 			el.className = "label grade";
-			el.textContent = GRADE_NAME[i];
+			el.textContent = GRADE_NAME[ring.grade - 1] ?? `${ring.grade}年级`;
 			const label = new CSS2DObject(el);
 			const r = ((ring.r1 + ring.r2) / 2) * SCALE;
 			label.position.set(r * Math.cos(avenue), BASE_H + 0.1, r * Math.sin(avenue));
@@ -551,7 +551,7 @@ export class KingdomScene implements View {
 			this.towns.add(pole, flag);
 			if (m !== "defended") return;
 			// 城墙：沿扇形边界放一排小石块
-			const ring = this.data.rings[v.grade - 1];
+			const ring = ringOf(this.data, v.grade);
 			const pad = 8;
 			const r1 = (ring.r1 + pad) * SCALE;
 			const r2 = (ring.r2 - pad) * SCALE;
