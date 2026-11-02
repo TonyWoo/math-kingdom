@@ -7,7 +7,7 @@
 //   ?focus=<年级>     镜头对准某个年级
 //   ?days=<n>        把“现在”往后挪 n 天，看复习提醒
 
-import { type Kingdom, type Progress, type Status, demoProgress, frontier, needsCare, stars, status, summary } from "../core/kingdom";
+import { type Kingdom, type Progress, type Status, demoProgress, frontier, gradeFrontier, needsCare, stars, status, summary } from "../core/kingdom";
 import { answerCount } from "../core/judge";
 import { type Outcome, type Plan, QuizSession, planFor } from "../core/quiz";
 import * as save from "../core/save";
@@ -93,11 +93,10 @@ export class App {
 			scene.focusGrade(focus, true);
 			if (this.spot) scene.setSpot?.(this.spot); // 小人还在原来的地方，镜头听网址的
 		} else {
-			// 从“开拓前线”开始：按依赖顺序（先修在前）最早的未学内容，镜头直接定位到它
+			// 从“开拓前线”开始：按依赖顺序（先修在前）最早的未学内容，镜头和小人都定位到它附近
 			const start = frontier(k, this.progress, this.now()) ?? k.order[0];
-			if (this.spot) scene.setSpot?.(this.spot); // 小人留在原来的地方，镜头去前线
 			scene.focusPlot(start, true);
-			if (!this.spot) this.moveSpot(this.spotNear(start));
+			this.moveSpot(this.spotNear(start));
 			if (Object.keys(this.progress).length === 0) {
 				this.toast(`欢迎来到数学王国！从王城旁边的「${k.topic(start).name}」开始建造吧。`, 6000);
 			}
@@ -486,10 +485,12 @@ export class App {
 		this.gradeFilter = grade;
 		this.close();
 		this.scene.setGradeFilter?.(grade);
-		// 定位到这个范围里按依赖顺序最早的未学内容；都学完了就看整圈（或全部时回全景）
-		const start = frontier(this.k, this.progress, this.now(), grade);
-		if (start) this.scene.focusPlot(start);
-		else if (grade === null) this.scene.goHome();
+		// 定位到这个范围里按依赖顺序最早的未学内容，小人也跟过去；都学完了就看整圈（或全部时回全景）
+		const start = grade === null ? frontier(this.k, this.progress, this.now()) : gradeFrontier(this.k, this.progress, this.now(), grade);
+		if (start) {
+			this.scene.focusPlot(start);
+			if (!this.scene.dialogue) this.moveSpot(this.spotNear(start));
+		} else if (grade === null) this.scene.goHome();
 		else this.scene.focusGrade(grade);
 	}
 

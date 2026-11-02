@@ -11,6 +11,7 @@ import {
 	demoProgress,
 	dependencyOrder,
 	frontier,
+	gradeFrontier,
 	needsCare,
 	stars,
 	status,
@@ -241,6 +242,11 @@ describe("frontier（按依赖顺序找接下来该学什么）", () => {
 		expect(frontier(small, {}, NOW, 2)).toBeNull();
 		expect(frontier(small, { a: { stars: 1 } }, NOW, 2)).toBe("b");
 		expect(frontier(small, { a: { stars: 1 } }, NOW, 1)).toBe("c");
+	});
+
+	it("年级前线：没有可学的时退到这个年级依赖顺序的起点（迷雾里也可以）", () => {
+		expect(gradeFrontier(small, {}, NOW, 2)).toBe("b");
+		expect(gradeFrontier(small, { a: { stars: 1 }, b: { stars: 3 }, d: { stars: 3 } }, NOW, 2)).toBeNull();
 	});
 
 	it("没有空地时找最早的没建完的；全建完返回 null", () => {

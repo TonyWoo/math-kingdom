@@ -155,6 +155,17 @@ export function frontier(k: Kingdom, progress: Progress, now: number, grade?: nu
 	return null;
 }
 
+// 年级前线：切换到某个年级时定位用。先按 frontier 找可学的；
+// 若这个年级还没有可学的（先修还卡在低年级），就退到这个年级按依赖顺序第一个没学完的——哪怕还在迷雾里，
+// 那里就是这个年级的链条起点；全学完返回 null。
+export function gradeFrontier(k: Kingdom, progress: Progress, now: number, grade: number): string | null {
+	return (
+		frontier(k, progress, now, grade) ??
+		dependencyOrder(k).find((id) => k.topic(id).grade === grade && stars(progress, id) < 3) ??
+		null
+	);
+}
+
 function hash(s: string): number {
 	let h = 2166136261;
 	for (let i = 0; i < s.length; i++) {
